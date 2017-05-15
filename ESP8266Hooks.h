@@ -23,12 +23,12 @@ class ESP8266Hooks
 
 	void registerAction(char *actionName, int (*callback)(NameValueCollection));
 
-	void loadSubscriptionsFromConfig();
-	String getSubscriptionsAsRaw();
-
 	void handleClient();
 
   private:
+	void loadSubscriptionsFromConfig();
+	String getSubscriptionsAsRaw();
+
 	ESP8266WebServer _server;
 	Storage _storage;
 	String _events[20];
