@@ -1,18 +1,18 @@
 /*
-  HookParameters.h - 
+  NameValueCollection.h - 
   Created by Nelo Pauselli, 21 de Enero, 2017.
 */
-#ifndef HookParameters_h
-#define HookParameters_h
+#ifndef NameValueCollection_h
+#define NameValueCollection_h
 
 #include "Arduino.h"
 #include "assert.h"
 #define MAX_SIZE 10
 
-class HookParameters
+class NameValueCollection
 {
   public:
-    HookParameters(int capacity){
+    NameValueCollection(int capacity){
       assert(capacity <= MAX_SIZE);
       
       _capacity = capacity;

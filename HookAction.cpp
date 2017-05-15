@@ -6,14 +6,14 @@
 #define HookAction_h
 
 #include "Arduino.h"
-#include "HookParameters.cpp"
+#include "NameValueCollection.cpp"
 
 class HookAction
 {
   public:
     HookAction() {}
     
-    HookAction(char* actionName, int (*callback)(HookParameters)){
+    HookAction(char* actionName, int (*callback)(NameValueCollection)){
       _actionName = actionName;
       _callback = callback;
     }
@@ -22,13 +22,13 @@ class HookAction
       return _actionName;
     }
     
-    int invoke(HookParameters parameters){
+    int invoke(NameValueCollection parameters){
       return _callback(parameters);
     }
     
   private:
     String _actionName;
-    int (*_callback)(HookParameters);
+    int (*_callback)(NameValueCollection);
 };
 
 #endif

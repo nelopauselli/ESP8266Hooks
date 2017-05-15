@@ -64,7 +64,7 @@ void ESP8266Hooks::init(Storage &storage, String deviceName) {
     DEBUG_PRINTLN("Creando parametros");
     delay(100);
 
-    HookParameters parameters(_server.args());
+    NameValueCollection parameters(_server.args());
     for (int i = 0; i < _server.args(); i++) {
       parameters.push(_server.argName(i), _server.arg(i));
     }

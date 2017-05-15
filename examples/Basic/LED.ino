@@ -9,7 +9,7 @@ void initLEDs() {
 
   hooks.registerEvent("led");
 
-  HookAction hookAction("led_1", [](HookParameters parameters){ //?state=[on|off]
+  HookAction hookAction("led_1", [](NameValueCollection parameters){ //?state=[on|off]
     
     String state = parameters["state"];
     if (state == "on") {

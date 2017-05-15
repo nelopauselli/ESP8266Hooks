@@ -6,7 +6,7 @@ int tryParseByte(String value){
 }
 
 void initConfiguration() {
-  HookAction hookAction("configure", [](HookParameters parameters){ //?temperatureInterval=[seconds]&pingInterval=[seconds]
+  HookAction hookAction("configure", [](NameValueCollection parameters){ //?temperatureInterval=[seconds]&pingInterval=[seconds]
     int temperatureInterval = tryParseByte(parameters["temperatureInterval"]);
     if(temperatureInterval != 0)
       cfg.temperatureInterval = temperatureInterval;
