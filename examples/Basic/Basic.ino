@@ -43,15 +43,21 @@ void setup()
 	WiFiAdapter wifi;
 	if (wifi.connect(ssid, pwd))
 	{
+		initLEDs();
+		initButton();
+
 		hooks.init(storage, "IoT Luz & Botón");
 
 		hooks.registerEvent("start");
 		hooks.registerEvent("ping");
 		hooks.registerEvent("button_change");
+
 		hooks.registerEvent("light_each_30_seconds");
 
-		initLEDs();
-		initButton();
+		hooks.registerEvent("led_change");
+		hooks.registerEvent("led_on");
+		hooks.registerEvent("led_off");
+		hooks.registerAction("led_1", listenerLed);
 
 		blinker.blink(1);
 

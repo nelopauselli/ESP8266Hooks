@@ -5,12 +5,6 @@ void initLEDs()
 	pinMode(D0, OUTPUT);
 	digitalWrite(D0, LOW);
 	currentState = "off";
-
-	hooks.registerEvent("led_change");
-	hooks.registerEvent("led_on");
-	hooks.registerEvent("led_off");
-
-	hooks.registerAction("led_1", listenerLed);
 }
 
 int listenerLed(NameValueCollection parameters) //?state=[on|off]
