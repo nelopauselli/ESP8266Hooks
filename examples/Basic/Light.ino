@@ -4,10 +4,13 @@ int lightTimes = 0;
 void readLight()
 {
   int value = analogRead(A0);
+  Serial.println(value);
+
   lightValue += value;
   lightTimes++;
 
-  Serial.println(lightValue);
+  if(value < 600)
+    writeLed("on");
 }
 
 void sendLight()
