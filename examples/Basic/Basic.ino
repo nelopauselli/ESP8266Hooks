@@ -53,6 +53,7 @@ void setup()
 		hooks.registerEvent("button_change");
 
 		hooks.registerEvent("light_each_30_seconds");
+		hooks.registerAction("light_configure", configureLight);
 
 		hooks.registerEvent("led_change");
 		hooks.registerEvent("led_on");
