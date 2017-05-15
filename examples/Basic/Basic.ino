@@ -6,7 +6,6 @@
  */
 #include <SimpleTimer.h>
 #include "ESP8266Hooks.h"
-#include "Button.cpp"
 #include "Blinker.cpp"
 #include "WifiAdapter.cpp"
 
@@ -23,7 +22,6 @@ bool started = false;
 
 Storage storage;
 ESP8266Hooks hooks;
-Button button(D8);
 Blinker blinker;
 SimpleTimer timer;
 
@@ -49,11 +47,11 @@ void setup()
 
 		hooks.registerEvent("start");
 		hooks.registerEvent("ping");
-		hooks.registerEvent("button");
-		hooks.registerEvent("Light_each_30_seconds");
+		hooks.registerEvent("button_change");
+		hooks.registerEvent("light_each_30_seconds");
 
 		initLEDs();
-		//initConfiguration();
+		initButton();
 
 		blinker.blink(1);
 
@@ -82,13 +80,6 @@ void configureTimers()
 	timer.setInterval(10 * 1000, pingping);
 	timer.setInterval(2 * 1000, readLight);
 	timer.setInterval(30 * 1000, sendLight);
-
-	timer.setInterval(500, [&]() {
-		if (button.wasPushed())
-		{
-			hooks.triggerEvent("button", "button_8=pressed");
-		}
-	});
 }
 
 void pingping()
@@ -98,12 +89,14 @@ void pingping()
 
 void loop()
 {
-	// put your main code here, to run repeatedly:
 	hooks.handleClient();
 
 	if (started)
 	{
-		button.run();
+		bool buttonChange = readButtonChange();
+		if(buttonChange)
+			sendButtonChange();
+
 		timer.run();
 	}
 	else
