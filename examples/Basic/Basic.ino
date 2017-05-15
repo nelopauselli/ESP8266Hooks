@@ -6,76 +6,55 @@
  */
 #include <SimpleTimer.h>
 #include "ESP8266Hooks.h"
-#include "Blinker.cpp"
-#include "WifiAdapter.cpp"
 
-//#define DEBUG
-#ifdef DEBUG
-#define DEBUG_PRINT(...) Serial.println(__VA_ARGS__)
-#define DEBUG_PRINTLN(...) Serial.println(__VA_ARGS__)
-#else
-#define DEBUG_PRINT(...)
-#define DEBUG_PRINTLN(...)
-#endif
-
-bool started = false;
-
-Storage storage;
 ESP8266Hooks hooks;
-Blinker blinker;
 SimpleTimer timer;
 
 void setup()
 {
 	Serial.begin(115200);
-	DEBUG_PRINTLN("Inicializando webhooks");
 
-	storage.init();
+	// Simple WiFi connection
+	const char *ssid = "<WIFI SSID>"; //your wifi SSID
+	const char *password = "<WIFI PASSOWRD>"; //your wifi password
 
-	// Empty subscriptions at reset
-	storage.saveSubscriptions("");
+	WiFi.mode(WIFI_STA);
+	IPAddress ip(192, 168, 1, 20); // set a valid ip for your network
+	IPAddress gateway(192, 168, 1, 1); // set gateway to match your network
+	IPAddress subnet(255, 255, 255, 0); // set subnet mask to match your
+	WiFi.config(ip, gateway, subnet);
+	WiFi.begin(ssid, password);
 
-	String ssid = "";
-	String pwd = "";
-	storage.readWifiSetting(ssid, pwd);
-
-	DEBUG_PRINTLN("Conectando con Wifi");
-	WiFiAdapter wifi;
-	if (wifi.connect(ssid, pwd))
+	while (WiFi.status() != WL_CONNECTED)
 	{
-		initLEDs();
-		initButton();
-
-		hooks.init(storage, "IoT Luz & Botón");
-
-		hooks.registerEvent("start");
-		hooks.registerEvent("ping");
-		hooks.registerEvent("button_change");
-
-		hooks.registerEvent("light_each_30_seconds");
-		hooks.registerAction("light_configure", configureLight);
-
-		hooks.registerEvent("led_change");
-		hooks.registerEvent("led_on");
-		hooks.registerEvent("led_off");
-		hooks.registerAction("led_1", listenerLed);
-
-		blinker.blink(1);
-
-		started = true;
-		hooks.triggerEvent("start", "start=1");
-		DEBUG_PRINTLN("Dispositivo inicializado:");
-		DEBUG_PRINTLN(hooks.definition());
-
-		configureTimers();
-
-		blinker.turnOn();
+		delay(500);
+		Serial.print(".");
 	}
-	else
-	{
-		wifi.initAccessPoint();
-		hooks.init(storage, "IoT Luz & Botón");
-	}
+
+	initLEDs();
+	initButton();
+
+	hooks.init("IoT Luz & Botón");
+	// Use true as second parameter to empty subscriptors list
+	//hooks.init("IoT Luz & Botón", true);
+
+	hooks.registerEvent("start");
+	hooks.registerEvent("ping");
+	hooks.registerEvent("button_change");
+
+	hooks.registerEvent("light_each_30_seconds");
+	hooks.registerAction("light_configure", configureLight);
+
+	hooks.registerEvent("led_change");
+	hooks.registerEvent("led_on");
+	hooks.registerEvent("led_off");
+	hooks.registerAction("led_1", listenerLed);
+
+	hooks.triggerEvent("start", "start=1");
+
+	configureTimers();
+
+	digitalWrite(LED_BUILTIN, LOW);
 }
 
 void configureTimers()
@@ -98,18 +77,11 @@ void loop()
 {
 	hooks.handleClient();
 
-	if (started)
-	{
-		bool buttonChange = readButtonChange();
-		if(buttonChange)
-			sendButtonChange();
+	bool buttonChange = readButtonChange();
+	if (buttonChange)
+		sendButtonChange();
 
-		timer.run();
-	}
-	else
-	{
-		blinker.blink(1);
-	}
+	timer.run();
 
 	delay(10);
 }

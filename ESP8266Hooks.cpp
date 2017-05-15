@@ -33,9 +33,14 @@ ESP8266Hooks::ESP8266Hooks()
 	_mac.toUpperCase();
 }
 
-void ESP8266Hooks::init(Storage &storage, String deviceName)
+void ESP8266Hooks::init(String deviceName, bool reset)
 {
-	_storage = storage;
+	_storage.init();
+
+	// Empty subscriptions at reset
+	if (reset)
+		_storage.saveSubscriptions("");
+
 	_deviceName = deviceName;
 	_server = ESP8266WebServer(80);
 
@@ -57,7 +62,7 @@ void ESP8266Hooks::init(Storage &storage, String deviceName)
 
 		this->listenEvent(event, target);
 
-		storage.saveSubscriptions(getSubscriptionsAsRaw());
+		_storage.saveSubscriptions(getSubscriptionsAsRaw());
 
 		_server.send(204);
 	});
@@ -118,37 +123,6 @@ void ESP8266Hooks::init(Storage &storage, String deviceName)
 		content += "</body>";
 		content += "</html>";
 		_server.send(200, "text/html", content);
-	});
-
-	_server.on("/settings", [&]() {
-		DEBUG_PRINTLN("Configuring wifi...");
-
-		String qsid = _server.arg("ssid");
-		String qpass = _server.arg("pass");
-
-		String content;
-		int statusCode;
-
-		if (qsid.length() > 0 && qpass.length() > 0)
-		{
-			storage.saveWifiSetting(qsid, qpass);
-
-			_server.sendHeader("Location", String("/hooks"), true);
-
-			content = "Setting saved,. restart your IoT device";
-			statusCode = 302;
-		}
-		else
-		{
-			content = "";
-			content += "Please, POST setting about your wifi network to http://";
-			content += WiFi.softAPIP();
-			content += "/settings?ssid=[ssid]&pass=[password]";
-
-			statusCode = 400;
-			DEBUG_PRINTLN("Sending 400");
-		}
-		_server.send(statusCode, "text/plain", content);
 	});
 
 	loadSubscriptionsFromConfig();

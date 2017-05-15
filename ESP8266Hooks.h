@@ -15,7 +15,7 @@ class ESP8266Hooks
   public:
 	ESP8266Hooks();
 	String definition();
-	void init(Storage &storage, String deviceName);
+	void init(String deviceName, bool reset=false);
 	void registerEvent(String event);
 	void listenEvent(String event, String target);
 	void registerSubscription(String listener);
