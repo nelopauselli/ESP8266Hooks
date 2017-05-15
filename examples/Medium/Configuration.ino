@@ -1,5 +1,12 @@
 #include "HookAction.cpp"
 
+struct Configuration
+{
+	int temperatureInterval;
+	int pingInterval;
+};
+Configuration cfg = {40, 10};
+
 int tryParseByte(String value)
 {
   if (value == "")

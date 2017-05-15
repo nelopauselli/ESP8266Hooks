@@ -27,13 +27,6 @@ Button button(D8);
 Blinker blinker;
 SimpleTimer timer;
 
-struct Configuration
-{
-	int temperatureInterval;
-	int pingInterval;
-};
-Configuration cfg = {40, 10};
-
 void setup()
 {
 	Serial.begin(115200);
@@ -41,24 +34,8 @@ void setup()
 
 	storage.init();
 
-	//storage.saveSubscriptions("temperature:http://192.168.1.10:3000/hub;humidity:http://192.168.1.10:3000/hub;button:http://192.168.1.10:3000/hub;");
-	//storage.saveSubscriptions("temperature:http://192.168.1.10:3000/hub;humidity:http://192.168.1.10:3000/hub;");
+	// Empty subscriptions at reset
 	storage.saveSubscriptions("");
-
-	/*
-   * TODO: ir a esto
-  
-  hooks.on("ready", [](){
-    hooks.registerEvent("start"); //este evento debería estar por defecto en Hooks
-    hooks.registerEvent("ping"); //este evento tamibén debería estar por defecto en Hooks
-
-    initButtons();
-    initLEDs();
-    initDht();
-  });
-  
-  hooks.begin(storage);
-  */
 
 	String ssid = "";
 	String pwd = "";
@@ -102,10 +79,7 @@ void configureTimers()
 	for (int i = 0; i < count; i++)
 		timer.deleteTimer(i);
 
-	timer.setInterval(cfg.pingInterval * 1000, pingping);
-
-	//timer.setInterval(2*1000, readDht);
-	//timer.setInterval(cfg.temperatureInterval*1000, sendDht);
+	timer.setInterval(10 * 1000, pingping);
 	timer.setInterval(2 * 1000, readLight);
 	timer.setInterval(30 * 1000, sendLight);
 
