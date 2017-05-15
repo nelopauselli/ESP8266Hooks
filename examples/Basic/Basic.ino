@@ -4,11 +4,9 @@
  *  D0: led yellow (R 47 ohm)
  *  A0: photoresistor (GND: 200 ohm, A0: 220 ohm, 3v3: direct)
  */
-#include <SimpleTimer.h>
 #include "ESP8266Hooks.h"
 
 ESP8266Hooks hooks;
-SimpleTimer timer;
 
 void setup()
 {
@@ -19,8 +17,8 @@ void setup()
 	const char *password = "<WIFI PASSOWRD>"; //your wifi password
 
 	WiFi.mode(WIFI_STA);
-	IPAddress ip(192, 168, 1, 20); // set a valid ip for your network
-	IPAddress gateway(192, 168, 1, 1); // set gateway to match your network
+	IPAddress ip(192, 168, 1, 20);		// set a valid ip for your network
+	IPAddress gateway(192, 168, 1, 1);  // set gateway to match your network
 	IPAddress subnet(255, 255, 255, 0); // set subnet mask to match your
 	WiFi.config(ip, gateway, subnet);
 	WiFi.begin(ssid, password);
@@ -52,26 +50,17 @@ void setup()
 
 	hooks.triggerEvent("start", "start=1");
 
-	configureTimers();
-
 	digitalWrite(LED_BUILTIN, LOW);
 }
 
-void configureTimers()
-{
-	int count = timer.getNumTimers();
-	for (int i = 0; i < count; i++)
-		timer.deleteTimer(i);
-
-	timer.setInterval(10 * 1000, pingping);
-	timer.setInterval(2 * 1000, readLight);
-	timer.setInterval(30 * 1000, sendLight);
-}
-
-void pingping()
+void sendping()
 {
 	hooks.triggerEvent("ping", "ping=1");
 }
+
+long lastPing = 0; // timer to send ping
+long lastReadLight = 0; // timer to read light
+long lastSendLight = 0; // timer to send light
 
 void loop()
 {
@@ -81,7 +70,23 @@ void loop()
 	if (buttonChange)
 		sendButtonChange();
 
-	timer.run();
+	if (lastPing + 10 * 1000 < millis())
+	{
+		sendping();
+		lastPing = millis();
+	}
+
+	if (lastReadLight + 2 * 1000 < millis())
+	{
+		readLight();
+		lastReadLight = millis();
+	}
+
+	if (lastSendLight + 30 * 1000 < millis())
+	{
+		sendLight();
+		lastSendLight = millis();
+	}
 
 	delay(10);
 }
