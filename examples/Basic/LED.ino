@@ -1,5 +1,3 @@
-#include "HookAction.cpp"
-
 char *currentState;
 
 void initLEDs()
@@ -8,31 +6,31 @@ void initLEDs()
 	digitalWrite(D0, LOW);
 	currentState = "off";
 
-	hooks.registerEvent("led");
+	hooks.registerEvent("led_change");
+	hooks.registerEvent("led_on");
+	hooks.registerEvent("led_off");
 
-	HookAction hookAction("led_1", [](NameValueCollection parameters) { //?state=[on|off]
+	hooks.registerAction("led_1", listenerLed);
+}
 
-		String state = parameters["state"];
-		if (state == "on")
-		{
-			writeLed("on");
-			return 204;
-		}
-		else if (state == "off")
-		{
-			writeLed("off");
-			return 204;
-		}
-		else
-		{
-			String body = "";
-			body += "bad state: ";
-			body += state;
-			return 400;
-		}
-	});
+int listenerLed(NameValueCollection parameters) //?state=[on|off]
+{
+	String state = parameters["state"];
+	if (state == "on")
+	{
+		writeLed("on");
+		return 204;
+	}
+	else if (state == "off")
+	{
+		writeLed("off");
+		return 204;
+	}
 
-	hooks.registerAction(hookAction);
+	String body = "";
+	body += "bad state: ";
+	body += state;
+	return 400;
 }
 
 void writeLed(char *state)
@@ -42,11 +40,17 @@ void writeLed(char *state)
 
 	String body;
 	body = "state=" + String(state);
-	hooks.triggerEvent("led", body);
+	hooks.triggerEvent("led_change", body);
 
 	if (state == "on")
+	{
 		digitalWrite(D0, HIGH);
+		hooks.triggerEvent("led_on", body);
+	}
 	else
+	{
 		digitalWrite(D0, LOW);
+		hooks.triggerEvent("led_off", body);
+	}
 	currentState = state;
 }

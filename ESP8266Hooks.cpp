@@ -285,8 +285,9 @@ void ESP8266Hooks::triggerEvent(String event, String body)
 	}
 }
 
-void ESP8266Hooks::registerAction(HookAction action)
+void ESP8266Hooks::registerAction(char *actionName, int (*callback)(NameValueCollection))
 {
+	HookAction action(actionName, callback);
 	_actions[_indexAction++] = action;
 }
 

@@ -21,7 +21,7 @@ class ESP8266Hooks
 	void registerSubscription(String listener);
 	void triggerEvent(String event, String body);
 
-	void registerAction(HookAction action);
+	void registerAction(char *actionName, int (*callback)(NameValueCollection));
 
 	void loadSubscriptionsFromConfig();
 	String getSubscriptionsAsRaw();
