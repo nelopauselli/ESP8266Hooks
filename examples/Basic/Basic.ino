@@ -1,7 +1,8 @@
 /*
  * Conexiones:
- *  D8: push button
- *  A0: photoresistor
+ *  D8: push button (GND: R 10k ohm)
+ *  D0: led yellow (R 47 ohm)
+ *  A0: photoresistor (GND: 200 ohm, A0: 220 ohm, 3v3: direct)
  */
 #include <SimpleTimer.h>
 #include "ESP8266Hooks.h"
@@ -74,8 +75,7 @@ void setup()
 		hooks.registerEvent("button");
 		hooks.registerEvent("Light_each_30_seconds");
 
-		//initLEDs();
-		//initDht();
+		initLEDs();
 		//initConfiguration();
 
 		blinker.blink(1);
