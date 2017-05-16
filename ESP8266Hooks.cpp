@@ -60,7 +60,7 @@ void ESP8266Hooks::init(String deviceName, bool reset)
 		DEBUG_PRINT(" => ");
 		DEBUG_PRINTLN(target);
 
-		this->listenEvent(event, target);
+		this->subscribeEvent(event, target);
 
 		_storage.saveSubscriptions(getSubscriptionsAsRaw());
 
@@ -156,14 +156,14 @@ String ESP8266Hooks::definition()
 	body += "], ";
 
 	body += "\"subscriptions\": [";
-	for (int i = 0; i < this->_indexListener; i++)
+	for (int i = 0; i < this->_indexSubscription; i++)
 	{
-		String listener = this->_subscriptions[i];
+		String subscripcion = this->_subscriptions[i];
 
 		if (i > 0)
 			body += ",";
 		body += "\"";
-		body += listener;
+		body += subscripcion;
 		body += "\"";
 	}
 	body += "],";
@@ -191,15 +191,15 @@ void ESP8266Hooks::registerEvent(String event)
 	_events[_indexEvent++] = event;
 }
 
-void ESP8266Hooks::listenEvent(String event, String target)
+void ESP8266Hooks::subscribeEvent(String subscription)
 {
-	String listener = String(event + ":" + target);
-	this->registerSubscription(listener);
+	_subscriptions[_indexSubscription++] = subscription;
 }
 
-void ESP8266Hooks::registerSubscription(String listener)
+void ESP8266Hooks::subscribeEvent(String event, String target)
 {
-	_subscriptions[_indexListener++] = listener;
+	String subscription = String(event + ":" + target);
+	subscribeEvent(subscription);
 }
 
 void ESP8266Hooks::triggerEvent(String event, String body)
@@ -210,15 +210,15 @@ void ESP8266Hooks::triggerEvent(String event, String body)
 	DEBUG_PRINT(event);
 	DEBUG_PRINTLN("'");
 
-	for (int i = 0; i < _indexListener; i++)
+	for (int i = 0; i < _indexSubscription; i++)
 	{
 		HTTPClient http;
 
-		String listener = _subscriptions[i];
+		String subscripcion = _subscriptions[i];
 
-		if (listener.startsWith(event))
+		if (subscripcion.startsWith(event))
 		{
-			String host = listener.substring(listener.indexOf(":") + 1);
+			String host = subscripcion.substring(subscripcion.indexOf(":") + 1);
 
 			DEBUG_PRINT("Enviando hook a ");
 			DEBUG_PRINTLN(host);
@@ -268,7 +268,7 @@ void ESP8266Hooks::registerAction(char *actionName, int (*callback)(NameValueCol
 String ESP8266Hooks::getSubscriptionsAsRaw()
 {
 	String raw = "";
-	for (int i = 0; i < _indexListener; i++)
+	for (int i = 0; i < _indexSubscription; i++)
 	{
 		raw += _subscriptions[i];
 		raw += ";";
@@ -284,10 +284,10 @@ void ESP8266Hooks::loadSubscriptionsFromConfig()
 	int at = raw.indexOf(';', from);
 	while (at != -1)
 	{
-		String listener = raw.substring(from, at);
-		DEBUG_PRINTLN(listener);
+		String subscripcion = raw.substring(from, at);
+		DEBUG_PRINTLN(subscripcion);
 
-		registerSubscription(listener);
+		subscribeEvent(subscripcion);
 
 		from = at + 1;
 		at = raw.indexOf(';', from);

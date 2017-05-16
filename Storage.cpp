@@ -22,7 +22,7 @@ void Storage::init()
 
 void Storage::saveSubscriptions(String raw)
 {
-	DEBUG_PRINTLN("Saving listeners");
+	DEBUG_PRINTLN("Saving subscriptions");
 	DEBUG_PRINTLN(raw);
 
 	for (int i = 0; i < raw.length(); ++i)
@@ -36,7 +36,7 @@ void Storage::saveSubscriptions(String raw)
 
 String Storage::loadSubscriptions()
 {
-	DEBUG_PRINTLN("Reading Listeners from EEPROM");
+	DEBUG_PRINTLN("Reading subscripcions from EEPROM");
 	String raw = "";
 	for (int i = 0; i < STORAGE_SIZE; ++i)
 	{

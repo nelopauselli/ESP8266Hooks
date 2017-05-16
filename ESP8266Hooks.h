@@ -17,8 +17,8 @@ class ESP8266Hooks
 	String definition();
 	void init(String deviceName, bool reset=false);
 	void registerEvent(String event);
-	void listenEvent(String event, String target);
-	void registerSubscription(String listener);
+	void subscribeEvent(String subscription);
+	void subscribeEvent(String event, String target);
 	void triggerEvent(String event, String body);
 
 	void registerAction(char *actionName, int (*callback)(NameValueCollection));
@@ -35,7 +35,7 @@ class ESP8266Hooks
 	String _subscriptions[40];
 	HookAction _actions[10];
 	int _indexEvent;
-	int _indexListener;
+	int _indexSubscription;
 	int _indexAction;
 	String _mac;
 	String _deviceName;
