@@ -51,7 +51,7 @@ void ESP8266Hooks::init(String deviceName, bool reset)
 	});
 
 	_server.on("/hooks", HTTP_POST, [&]() {
-		DEBUG_PRINT("Registrando hook ");
+		DEBUG_PRINT("Agregando suscripción ");
 
 		String event = _server.arg("event");
 		String target = _server.arg("target");
@@ -63,6 +63,31 @@ void ESP8266Hooks::init(String deviceName, bool reset)
 		this->subscribeEvent(event, target);
 
 		_storage.saveSubscriptions(getSubscriptionsAsRaw());
+
+		_server.send(204);
+	});
+
+	_server.on("/hooks", HTTP_DELETE, [&]() {
+		DEBUG_PRINT("Eliminando suscripción ");
+
+		String event = _server.arg("event");
+		String target = _server.arg("target");
+
+		DEBUG_PRINT(event);
+		DEBUG_PRINT(" => ");
+		DEBUG_PRINTLN(target);
+
+		this->unsubscribeEvent(event, target);
+
+		_storage.saveSubscriptions(getSubscriptionsAsRaw());
+
+		_server.send(204);
+	});
+
+	_server.on("/hooks", HTTP_OPTIONS, [&]() {
+		_server.sendHeader("access-control-allow-credentials", "false");
+		_server.sendHeader("access-control-allow-headers", "x-requested-with");
+		_server.sendHeader("access-control-allow-methods", "GET,POST,DELETE,OPTIONS");
 
 		_server.send(204);
 	});
@@ -200,6 +225,22 @@ void ESP8266Hooks::subscribeEvent(String event, String target)
 {
 	String subscription = String(event + ":" + target);
 	subscribeEvent(subscription);
+}
+
+void ESP8266Hooks::unsubscribeEvent(String event, String target)
+{
+	String subscription = String(event + ":" + target);
+	for (int i = 0; i < _indexSubscription; i++)
+	{
+		if (_subscriptions[i] == subscription)
+		{
+			for (int j = i + 1; j < _indexSubscription; j++)
+				_subscriptions[j - 1] = _subscriptions[j];
+
+			_indexSubscription--;
+			return;
+		}
+	}
 }
 
 void ESP8266Hooks::triggerEvent(String event, String body)

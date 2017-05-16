@@ -19,6 +19,7 @@ class ESP8266Hooks
 	void registerEvent(String event);
 	void subscribeEvent(String subscription);
 	void subscribeEvent(String event, String target);
+	void unsubscribeEvent(String event, String target);
 	void triggerEvent(String event, String body);
 
 	void registerAction(char *actionName, int (*callback)(NameValueCollection));
