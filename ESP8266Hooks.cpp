@@ -44,6 +44,10 @@ void ESP8266Hooks::init(String deviceName, bool reset)
 	_deviceName = deviceName;
 	_server = ESP8266WebServer(80);
 
+	_server.on("/ping", HTTP_GET, [&]() {
+		_server.send(200, "text/plain", "pong");
+	});
+
 	_server.on("/hooks", HTTP_GET, [&]() {
 		DEBUG_PRINTLN("enviando hooks");
 		String body = this->definition();
