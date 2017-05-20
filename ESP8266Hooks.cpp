@@ -45,6 +45,7 @@ void ESP8266Hooks::init(String deviceName, bool reset)
 	_server = ESP8266WebServer(80);
 
 	_server.on("/ping", HTTP_GET, [&]() {
+		DEBUG_PRINTLN("ping/pong");
 		_server.send(200, "text/plain", "pong");
 	});
 
@@ -102,7 +103,6 @@ void ESP8266Hooks::init(String deviceName, bool reset)
 		DEBUG_PRINTLN(actionName);
 
 		DEBUG_PRINTLN("Creando parametros");
-		delay(100);
 
 		NameValueCollection parameters(_server.args());
 		for (int i = 0; i < _server.args(); i++)
@@ -111,7 +111,6 @@ void ESP8266Hooks::init(String deviceName, bool reset)
 		}
 
 		DEBUG_PRINTLN("Buscando y lanzando accion");
-		delay(100);
 
 		for (int i = 0; i < _indexAction; i++)
 		{
@@ -119,9 +118,7 @@ void ESP8266Hooks::init(String deviceName, bool reset)
 			if (actionName == hookAction.getActionName())
 			{
 				DEBUG_PRINT("Desencadenando accion con los parametros: ");
-				delay(100);
 				DEBUG_PRINTLN(parameters.toString());
-				delay(100);
 				int statusCode = hookAction.invoke(parameters);
 				_server.send(statusCode);
 			}
@@ -153,6 +150,12 @@ void ESP8266Hooks::init(String deviceName, bool reset)
 		content += "</html>";
 		_server.send(200, "text/html", content);
 	});
+
+	_server.onNotFound ( [&](){
+		String path = _server.uri();
+		DEBUG_PRINTLN("RESPONSE NOT FOUND FOR: " + path);
+		_server.send(404, "text/plain", "");
+	} );
 
 	loadSubscriptionsFromConfig();
 
