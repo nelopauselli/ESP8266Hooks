@@ -1,0 +1,29 @@
+#######################################
+# Syntax Coloring Map For ESP8266Hooks
+#######################################
+
+#######################################
+# Library (KEYWORD3)
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+ESP8266Hooks	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+registerEvent	KEYWORD2
+subscribeEvent	KEYWORD2
+unsubscribeEvent	KEYWORD2
+triggerEvent	KEYWORD2
+registerAction	KEYWORD2
+handleClient	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
