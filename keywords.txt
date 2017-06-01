@@ -16,6 +16,7 @@ ESP8266Hooks	KEYWORD1
 # Methods and Functions (KEYWORD2)
 #######################################
 
+init	KEYWORD2
 registerEvent	KEYWORD2
 subscribeEvent	KEYWORD2
 unsubscribeEvent	KEYWORD2
