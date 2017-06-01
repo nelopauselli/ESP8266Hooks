@@ -10,7 +10,13 @@ ESP8266Hooks hooks;
 
 void setup()
 {
+	pinMode(LED_BUILTIN, OUTPUT);
+	digitalWrite(LED_BUILTIN, HIGH);
+
 	Serial.begin(115200);
+
+	initLEDs();
+	initButton();
 
 	// Simple WiFi connection
 	const char *ssid = "<WIFI SSID>"; //your wifi SSID
@@ -22,15 +28,12 @@ void setup()
 	IPAddress subnet(255, 255, 255, 0); // set subnet mask to match your
 	WiFi.config(ip, gateway, subnet);
 	WiFi.begin(ssid, password);
-
+	
 	while (WiFi.status() != WL_CONNECTED)
 	{
 		delay(500);
 		Serial.print(".");
 	}
-
-	initLEDs();
-	initButton();
 
 	hooks.init("IoT Luz & Botón");
 	// Use true as second parameter to empty subscriptors list

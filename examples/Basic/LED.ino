@@ -1,9 +1,11 @@
+#define LED D1
+
 char *currentState;
 
 void initLEDs()
 {
-	pinMode(D0, OUTPUT);
-	digitalWrite(D0, LOW);
+	pinMode(LED, OUTPUT);
+	digitalWrite(LED, HIGH);
 	currentState = "off";
 }
 
@@ -38,12 +40,12 @@ void writeLed(char *state)
 
 	if (state == "on")
 	{
-		digitalWrite(D0, HIGH);
+		digitalWrite(LED, LOW);
 		hooks.triggerEvent("led_on", body);
 	}
 	else
 	{
-		digitalWrite(D0, LOW);
+		digitalWrite(LED, HIGH);
 		hooks.triggerEvent("led_off", body);
 	}
 	currentState = state;

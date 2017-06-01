@@ -56,6 +56,8 @@ void loop() {
 		state = false;
 		Serial.println("off");
 	}
+
+	delay(50);
 }
 
 int listenerLedOn(NameValueCollection parameters){
