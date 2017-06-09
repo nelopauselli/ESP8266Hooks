@@ -175,15 +175,16 @@ String ESP8266Hooks::definition()
 	body += "\", ";
 
 	body += "\"events\": [";
-	for (int i = 0; i < this->_indexEvent; i++)
+	Event* event = _events;
+	while(event!=NULL)
 	{
-		String eventName = this->_events[i];
-
-		if (i > 0)
+		if(event!=_events)
 			body += ",";
 		body += "\"";
-		body += eventName;
+		body += event->name;
 		body += "\"";
+
+		event = event->next;
 	}
 	body += "], ";
 
@@ -218,9 +219,13 @@ String ESP8266Hooks::definition()
 	return body;
 }
 
-void ESP8266Hooks::registerEvent(String event)
+void ESP8266Hooks::registerEvent(String eventName)
 {
-	_events[_indexEvent++] = event;
+	Event* event = new Event();
+	event->name = eventName;
+
+	event->next = _events;
+	_events = event;
 }
 
 void ESP8266Hooks::subscribeEvent(String subscription)

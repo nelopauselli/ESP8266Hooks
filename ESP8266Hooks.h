@@ -10,6 +10,11 @@
 #include "Storage.h"
 #include <ESP8266WebServer.h>
 
+struct Event {
+	String name;
+	Event* next;
+};
+
 class ESP8266Hooks
 {
   public:
@@ -32,10 +37,9 @@ class ESP8266Hooks
 
 	ESP8266WebServer _server;
 	Storage _storage;
-	String _events[20];
+	Event* _events = NULL;
 	String _subscriptions[40];
 	HookAction _actions[10];
-	int _indexEvent;
 	int _indexSubscription;
 	int _indexAction;
 	String _mac;
