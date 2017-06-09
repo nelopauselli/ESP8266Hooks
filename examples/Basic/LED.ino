@@ -1,4 +1,4 @@
-#define LED D1
+#define LED D3
 
 char *currentState;
 
@@ -9,24 +9,16 @@ void initLEDs()
 	currentState = "off";
 }
 
-int listenerLed(NameValueCollection parameters) //?state=[on|off]
+int listenerLedOn(NameValueCollection parameters)
 {
-	String state = parameters["state"];
-	if (state == "on")
-	{
-		writeLed("on");
-		return 204;
-	}
-	else if (state == "off")
-	{
-		writeLed("off");
-		return 204;
-	}
+	writeLed("on");
+	return 204;
+}
 
-	String body = "";
-	body += "bad state: ";
-	body += state;
-	return 400;
+int listenerLedOff(NameValueCollection parameters)
+{
+	writeLed("off");
+	return 204;
 }
 
 void writeLed(char *state)

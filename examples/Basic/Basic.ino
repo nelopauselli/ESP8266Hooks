@@ -40,7 +40,6 @@ void setup()
 	//hooks.init("IoT Luz & Botón", true);
 
 	hooks.registerEvent("start");
-	hooks.registerEvent("ping");
 	hooks.registerEvent("button_change");
 
 	hooks.registerEvent("light_each_30_seconds");
@@ -49,19 +48,14 @@ void setup()
 	hooks.registerEvent("led_change");
 	hooks.registerEvent("led_on");
 	hooks.registerEvent("led_off");
-	hooks.registerAction("led_1", listenerLed);
+	hooks.registerAction("led_on", listenerLedOn);
+	hooks.registerAction("led_off", listenerLedOff);
 
 	hooks.triggerEvent("start", "start=1");
 
 	digitalWrite(LED_BUILTIN, LOW);
 }
 
-void sendping()
-{
-	hooks.triggerEvent("ping", "ping=1");
-}
-
-long lastPing = 0; // timer to send ping
 long lastReadLight = 0; // timer to read light
 long lastSendLight = 0; // timer to send light
 
@@ -72,12 +66,6 @@ void loop()
 	bool buttonChange = readButtonChange();
 	if (buttonChange)
 		sendButtonChange();
-
-	if (lastPing + 10 * 1000 < millis())
-	{
-		sendping();
-		lastPing = millis();
-	}
 
 	if (lastReadLight + 2 * 1000 < millis())
 	{

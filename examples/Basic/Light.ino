@@ -11,17 +11,12 @@ void readLight()
 
 	lightValue += value;
 	lightTimes++;
-
-	if (value < lightLimit)
-		writeLed("on");
-	else
-		writeLed("off");
 }
 
 void sendLight()
 {
 	int value = lightValue / lightTimes;
-	String body = "{light: " + String(value, DEC) + "}";
+	String body = "light=" + String(value, DEC);
 	hooks.triggerEvent("light_each_30_seconds", body);
 	lightValue = 0;
 	lightTimes = 0;

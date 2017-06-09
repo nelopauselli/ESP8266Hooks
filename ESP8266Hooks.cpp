@@ -151,11 +151,11 @@ void ESP8266Hooks::init(String deviceName, bool reset)
 		_server.send(200, "text/html", content);
 	});
 
-	_server.onNotFound ( [&](){
+	_server.onNotFound([&]() {
 		String path = _server.uri();
 		DEBUG_PRINTLN("RESPONSE NOT FOUND FOR: " + path);
 		_server.send(404, "text/plain", "");
-	} );
+	});
 
 	loadSubscriptionsFromConfig();
 
@@ -260,8 +260,6 @@ void ESP8266Hooks::triggerEvent(String event, String body)
 
 	for (int i = 0; i < _indexSubscription; i++)
 	{
-		HTTPClient http;
-
 		String subscripcion = _subscriptions[i];
 
 		if (subscripcion.startsWith(event))
@@ -271,39 +269,52 @@ void ESP8266Hooks::triggerEvent(String event, String body)
 			DEBUG_PRINT("Enviando hook a ");
 			DEBUG_PRINTLN(host);
 
-			DEBUG_PRINTLN("Http begin...");
+			HTTPClient http;
+			http.setTimeout(500);
+			delay(50);
 
-			http.begin(host); //HTTP
+			int beginStart = millis();
+			bool begined = http.begin(host);
+			int beginEnd = millis();
 
-			DEBUG_PRINTLN("Http POST...");
-
-			http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-
-			String content = "mac=" + _mac + "&event=" + event + "&" + body;
-
-			int requestStart = millis();
-			int httpCode = http.POST(content);
-			int requestEnd = millis();
-			//http.writeToStream(&Serial);
-
-			if (httpCode > 0)
+			if (begined)
 			{
-				// HTTP header has been send and Server response header has been handled
-				DEBUG_PRINTF("[HTTP] POST in %dms. code: %d\n", requestEnd - requestStart, httpCode);
+				DEBUG_PRINTF("[HTTP] Begin in %dms.\n", beginEnd - beginStart);
 
-				// file found at server
-				if (httpCode == HTTP_CODE_OK)
+				DEBUG_PRINTLN("Http POST...");
+
+				http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+
+				String content = "mac=" + _mac + "&event=" + event + "&" + body;
+
+				int requestStart = millis();
+				int httpCode = http.POST(content);
+				int requestEnd = millis();
+				//http.writeToStream(&Serial);
+
+				if (httpCode > 0)
 				{
-					String payload = http.getString();
-					DEBUG_PRINTLN(payload);
+					// HTTP header has been send and Server response header has been handled
+					DEBUG_PRINTF("[HTTP] POST in %dms. code: %d\n", requestEnd - requestStart, httpCode);
+
+					// file found at server
+					if (httpCode == HTTP_CODE_OK)
+					{
+						String payload = http.getString();
+						DEBUG_PRINTLN(payload);
+					}
+				}
+				else
+				{
+					DEBUG_PRINTF("[HTTP] POST failed in %dms, error: %s\n", requestEnd - requestStart, http.errorToString(httpCode).c_str());
 				}
 			}
 			else
 			{
-				DEBUG_PRINTF("[HTTP] POST... failed in %dms, error: %s\n", requestEnd - requestStart, http.errorToString(httpCode).c_str());
+				DEBUG_PRINTF("[HTTP] BEGIN failed in %dms\n", beginEnd - beginStart);
 			}
+			http.end();
 		}
-		http.end();
 	}
 }
 
