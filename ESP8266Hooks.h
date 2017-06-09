@@ -11,6 +11,7 @@
 
 struct Subscription {
 	String target;
+	String pattern;
 	Subscription* next;
 };
 
@@ -27,7 +28,7 @@ class ESP8266Hooks
 	String definition();
 	void init(String deviceName);
 	void registerEvent(String eventName);
-	void subscribeEvent(String eventName, String target);
+	void subscribeEvent(String eventName, String target, String pattern);
 	void unsubscribeEvent(String eventName, String target);
 	void triggerEvent(String eventName, String body);
 

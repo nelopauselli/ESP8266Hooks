@@ -54,12 +54,16 @@ void ESP8266Hooks::init(String deviceName)
 
 		String event = _server.arg("event");
 		String target = _server.arg("target");
+		String pattern = _server.arg("template");
 
 		DEBUG_PRINT(event);
 		DEBUG_PRINT(" => ");
-		DEBUG_PRINTLN(target);
+		DEBUG_PRINT(target);
+		DEBUG_PRINT(" [");
+		DEBUG_PRINT(pattern);
+		DEBUG_PRINT("] ");
 
-		this->subscribeEvent(event, target);
+		this->subscribeEvent(event, target, pattern);
 
 		_server.send(204);
 	});
@@ -177,9 +181,14 @@ String ESP8266Hooks::definition()
 		{
 			if (subscription != event->subscriptions)
 				body += ",";
-			body += "{\"target\": \"";
+			body += "{";
+			body += "\"target\": \"";
 			body += subscription->target;
-			body += "\"}";
+			body += "\"";
+			body += ",\"template\": \"";
+			body += subscription->pattern;
+			body += "\"";
+			body += "}";
 
 			subscription = subscription->next;
 		}
@@ -216,7 +225,7 @@ void ESP8266Hooks::registerEvent(String eventName)
 	_events = event;
 }
 
-void ESP8266Hooks::subscribeEvent(String eventName, String target)
+void ESP8266Hooks::subscribeEvent(String eventName, String target, String pattern)
 {
 	Event *event = _events;
 	while (event != NULL)
@@ -225,6 +234,7 @@ void ESP8266Hooks::subscribeEvent(String eventName, String target)
 		{
 			Subscription *subscription = new Subscription();
 			subscription->target = target;
+			subscription->pattern = pattern;
 			subscription->next = event->subscriptions;
 
 			event->subscriptions = subscription;
