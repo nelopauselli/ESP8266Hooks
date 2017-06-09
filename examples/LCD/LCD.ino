@@ -21,9 +21,11 @@ void setup()
 	Serial.begin(115200);
 
 	// Simple WiFi connection
-	const char *ssid = "<WIFI SSID>"; //your wifi SSID
-	const char *password = "<WIFI PASSOWRD>"; //your wifi password
-	
+	//const char *ssid = "<WIFI SSID>"; //your wifi SSID
+	//const char *password = "<WIFI PASSOWRD>"; //your wifi password
+	const char *ssid = "Neluzlandia"; //your wifi SSID
+	const char *password = "titi1308"; //your wifi password
+
 	WiFi.mode(WIFI_STA);
 	IPAddress ip(192, 168, 1, 20);		// set a valid ip for your network
 	IPAddress gateway(192, 168, 1, 1);  // set gateway to match your network
@@ -31,11 +33,13 @@ void setup()
 	WiFi.config(ip, gateway, subnet);
 	WiFi.begin(ssid, password);
 	
+	Serial.println("");
 	while (WiFi.status() != WL_CONNECTED)
 	{
 		delay(500);
 		Serial.print(".");
 	}
+	Serial.println("");
 
 	initLCD();
 	lcd.setCursor(0, 0);
@@ -43,9 +47,10 @@ void setup()
 	lcd.setCursor(0, 1);
 	lcd.print(WiFi.localIP());
 
-	hooks.init("LCD", true);
+	hooks.init("LCD");
 
 	hooks.registerEvent("start");
+	hooks.registerEvent("text_change");
 
 	hooks.registerAction("show_text", textChange);
 

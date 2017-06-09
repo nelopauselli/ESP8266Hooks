@@ -33,14 +33,8 @@ ESP8266Hooks::ESP8266Hooks()
 	_mac.toUpperCase();
 }
 
-void ESP8266Hooks::init(String deviceName, bool reset)
+void ESP8266Hooks::init(String deviceName)
 {
-	_storage.init();
-
-	// Empty subscriptions at reset
-	if (reset)
-		_storage.saveSubscriptions("");
-
 	_deviceName = deviceName;
 	_server = ESP8266WebServer(80);
 
@@ -67,8 +61,6 @@ void ESP8266Hooks::init(String deviceName, bool reset)
 
 		this->subscribeEvent(event, target);
 
-		_storage.saveSubscriptions(getSubscriptionsAsRaw());
-
 		_server.send(204);
 	});
 
@@ -83,8 +75,6 @@ void ESP8266Hooks::init(String deviceName, bool reset)
 		DEBUG_PRINTLN(target);
 
 		this->unsubscribeEvent(event, target);
-
-		_storage.saveSubscriptions(getSubscriptionsAsRaw());
 
 		_server.send(204);
 	});
@@ -157,8 +147,6 @@ void ESP8266Hooks::init(String deviceName, bool reset)
 		_server.send(404, "text/plain", "");
 	});
 
-	loadSubscriptionsFromConfig();
-
 	_server.begin();
 }
 
@@ -175,31 +163,31 @@ String ESP8266Hooks::definition()
 	body += "\", ";
 
 	body += "\"events\": [";
-	Event* event = _events;
-	while(event!=NULL)
+	Event *event = _events;
+	while (event != NULL)
 	{
-		if(event!=_events)
+		if (event != _events)
 			body += ",";
-		body += "\"";
+		body += "{\"name\": \"";
 		body += event->name;
-		body += "\"";
+		body += "\", \"subscriptions\": [";
+
+		Subscription *subscription = event->subscriptions;
+		while (subscription != NULL)
+		{
+			if (subscription != event->subscriptions)
+				body += ",";
+			body += "{\"target\": \"";
+			body += subscription->target;
+			body += "\"}";
+
+			subscription = subscription->next;
+		}
+		body += "]}";
 
 		event = event->next;
 	}
 	body += "], ";
-
-	body += "\"subscriptions\": [";
-	for (int i = 0; i < this->_indexSubscription; i++)
-	{
-		String subscripcion = this->_subscriptions[i];
-
-		if (i > 0)
-			body += ",";
-		body += "\"";
-		body += subscripcion;
-		body += "\"";
-	}
-	body += "],";
 
 	body += "\"actions\": [";
 	for (int i = 0; i < this->_indexAction; i++)
@@ -221,105 +209,128 @@ String ESP8266Hooks::definition()
 
 void ESP8266Hooks::registerEvent(String eventName)
 {
-	Event* event = new Event();
+	Event *event = new Event();
 	event->name = eventName;
 
 	event->next = _events;
 	_events = event;
 }
 
-void ESP8266Hooks::subscribeEvent(String subscription)
+void ESP8266Hooks::subscribeEvent(String eventName, String target)
 {
-	_subscriptions[_indexSubscription++] = subscription;
-}
-
-void ESP8266Hooks::subscribeEvent(String event, String target)
-{
-	String subscription = String(event + ":" + target);
-	subscribeEvent(subscription);
-}
-
-void ESP8266Hooks::unsubscribeEvent(String event, String target)
-{
-	String subscription = String(event + ":" + target);
-	for (int i = 0; i < _indexSubscription; i++)
+	Event *event = _events;
+	while (event != NULL)
 	{
-		if (_subscriptions[i] == subscription)
+		if (event->name == eventName)
 		{
-			for (int j = i + 1; j < _indexSubscription; j++)
-				_subscriptions[j - 1] = _subscriptions[j];
+			Subscription *subscription = new Subscription();
+			subscription->target = target;
+			subscription->next = event->subscriptions;
 
-			_indexSubscription--;
-			return;
+			event->subscriptions = subscription;
+
+			break;
 		}
+		event = event->next;
 	}
 }
 
-void ESP8266Hooks::triggerEvent(String event, String body)
+void ESP8266Hooks::unsubscribeEvent(String eventName, String target)
+{
+	Event *event = _events;
+	while (event != NULL)
+	{
+		if (event->name == eventName)
+		{
+			Subscription *subscription = event->subscriptions;
+			while (subscription != NULL)
+			{
+				if (subscription->target == target)
+				{
+					//TODO: quitar Subscription de la pila
+					break;
+				}
+				subscription = subscription->next;
+			}
+			break;
+		}
+		event = event->next;
+	}
+}
+
+void ESP8266Hooks::triggerEvent(String eventName, String body)
 {
 	// TODO: agendar los eventos y desencadenarlos cuando no esté el server activo.
 
 	DEBUG_PRINT("desencadenado '");
-	DEBUG_PRINT(event);
+	DEBUG_PRINT(eventName);
 	DEBUG_PRINTLN("'");
 
-	for (int i = 0; i < _indexSubscription; i++)
+	Event *event = _events;
+
+	while (event != NULL)
 	{
-		String subscripcion = _subscriptions[i];
-
-		if (subscripcion.startsWith(event))
+		if (event->name == eventName)
 		{
-			String host = subscripcion.substring(subscripcion.indexOf(":") + 1);
+			Subscription* subscription = event->subscriptions;
 
-			DEBUG_PRINT("Enviando hook a ");
-			DEBUG_PRINTLN(host);
-
-			HTTPClient http;
-			http.setTimeout(500);
-			delay(50);
-
-			int beginStart = millis();
-			bool begined = http.begin(host);
-			int beginEnd = millis();
-
-			if (begined)
+			while (subscription != NULL)
 			{
-				DEBUG_PRINTF("[HTTP] Begin in %dms.\n", beginEnd - beginStart);
+				String host = subscription->target;
 
-				DEBUG_PRINTLN("Http POST...");
+				DEBUG_PRINT("Enviando hook a ");
+				DEBUG_PRINTLN(host);
 
-				http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+				HTTPClient http;
+				http.setTimeout(500);
+				delay(50);
 
-				String content = "mac=" + _mac + "&event=" + event + "&" + body;
+				int beginStart = millis();
+				bool begined = http.begin(host);
+				int beginEnd = millis();
 
-				int requestStart = millis();
-				int httpCode = http.POST(content);
-				int requestEnd = millis();
-				//http.writeToStream(&Serial);
-
-				if (httpCode > 0)
+				if (begined)
 				{
-					// HTTP header has been send and Server response header has been handled
-					DEBUG_PRINTF("[HTTP] POST in %dms. code: %d\n", requestEnd - requestStart, httpCode);
+					DEBUG_PRINTF("[HTTP] Begin in %dms.\n", beginEnd - beginStart);
 
-					// file found at server
-					if (httpCode == HTTP_CODE_OK)
+					DEBUG_PRINTLN("Http POST...");
+
+					http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+
+					String content = "mac=" + _mac + "&event=" + eventName + "&" + body;
+
+					int requestStart = millis();
+					int httpCode = http.POST(content);
+					int requestEnd = millis();
+					//http.writeToStream(&Serial);
+
+					if (httpCode > 0)
 					{
-						String payload = http.getString();
-						DEBUG_PRINTLN(payload);
+						// HTTP header has been send and Server response header has been handled
+						DEBUG_PRINTF("[HTTP] POST in %dms. code: %d\n", requestEnd - requestStart, httpCode);
+
+						// file found at server
+						if (httpCode == HTTP_CODE_OK)
+						{
+							String payload = http.getString();
+							DEBUG_PRINTLN(payload);
+						}
+					}
+					else
+					{
+						DEBUG_PRINTF("[HTTP] POST failed in %dms, error: %s\n", requestEnd - requestStart, http.errorToString(httpCode).c_str());
 					}
 				}
 				else
 				{
-					DEBUG_PRINTF("[HTTP] POST failed in %dms, error: %s\n", requestEnd - requestStart, http.errorToString(httpCode).c_str());
+					DEBUG_PRINTF("[HTTP] BEGIN failed in %dms\n", beginEnd - beginStart);
 				}
+				http.end();
+
+				subscription = subscription->next;
 			}
-			else
-			{
-				DEBUG_PRINTF("[HTTP] BEGIN failed in %dms\n", beginEnd - beginStart);
-			}
-			http.end();
 		}
+		event = event->next;
 	}
 }
 
@@ -327,35 +338,6 @@ void ESP8266Hooks::registerAction(char *actionName, int (*callback)(NameValueCol
 {
 	HookAction action(actionName, callback);
 	_actions[_indexAction++] = action;
-}
-
-String ESP8266Hooks::getSubscriptionsAsRaw()
-{
-	String raw = "";
-	for (int i = 0; i < _indexSubscription; i++)
-	{
-		raw += _subscriptions[i];
-		raw += ";";
-	}
-	return raw;
-}
-
-void ESP8266Hooks::loadSubscriptionsFromConfig()
-{
-	String raw = _storage.loadSubscriptions();
-
-	int from = 0;
-	int at = raw.indexOf(';', from);
-	while (at != -1)
-	{
-		String subscripcion = raw.substring(from, at);
-		DEBUG_PRINTLN(subscripcion);
-
-		subscribeEvent(subscripcion);
-
-		from = at + 1;
-		at = raw.indexOf(';', from);
-	}
 }
 
 void ESP8266Hooks::handleClient()
