@@ -21,10 +21,8 @@ void setup()
 	Serial.begin(115200);
 
 	// Simple WiFi connection
-	//const char *ssid = "<WIFI SSID>"; //your wifi SSID
-	//const char *password = "<WIFI PASSOWRD>"; //your wifi password
-	const char *ssid = "Neluzlandia"; //your wifi SSID
-	const char *password = "titi1308"; //your wifi password
+	const char *ssid = "<WIFI SSID>"; //your wifi SSID
+	const char *password = "<WIFI PASSOWRD>"; //your wifi password
 
 	WiFi.mode(WIFI_STA);
 	IPAddress ip(192, 168, 1, 20);		// set a valid ip for your network
@@ -84,6 +82,8 @@ int textChange(NameValueCollection parameters)
 
 	lcd.setCursor(0, 1);
 	lcd.print(line2);
+
+	hooks.triggerEvent("text_change", "line1="+line1+"&line2="+line2);
 
 	return 204;
 }
