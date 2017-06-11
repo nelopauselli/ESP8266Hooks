@@ -48,11 +48,11 @@ void loop() {
 
 	int seconds = millis() / 1000;
 	if(seconds % 2==0 && !state){
-		hooks.triggerEvent("blink_on", "");
+		hooks.triggerEvent("blink_on", NULL);
 		state = true;
 		Serial.println("on");
 	} else if (seconds % 2==1 && state){
-		hooks.triggerEvent("blink_off", "");
+		hooks.triggerEvent("blink_off", NULL);
 		state = false;
 		Serial.println("off");
 	}

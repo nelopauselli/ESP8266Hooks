@@ -26,19 +26,19 @@ void writeLed(char *state)
 	if (currentState == state)
 		return;
 
-	String body;
-	body = "state=" + String(state);
-	hooks.triggerEvent("led_change", body);
+	NameValueCollection parameters(1);
+	parameters.push("state", state);
+	hooks.triggerEvent("led_change", parameters);
 
 	if (state == "on")
 	{
 		digitalWrite(LED, LOW);
-		hooks.triggerEvent("led_on", body);
+		hooks.triggerEvent("led_on", parameters);
 	}
 	else
 	{
 		digitalWrite(LED, HIGH);
-		hooks.triggerEvent("led_off", body);
+		hooks.triggerEvent("led_off", parameters);
 	}
 	currentState = state;
 }

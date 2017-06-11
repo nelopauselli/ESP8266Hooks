@@ -30,11 +30,15 @@ void readDht()
 
 		if (hum > 65 && lastHum < 65)
 		{
-			hooks.triggerEvent("humedad_mayor_65", "humidity=" + String(hum, DEC));
+			NameValueCollection parameters(1);
+			parameters.push("humidity", String(hum, DEC));
+			hooks.triggerEvent("humedad_mayor_65", parameters);
 		}
 		if (hum < 65 && lastHum > 65)
 		{
-			hooks.triggerEvent("humedad_menor_65", "humidity=" + String(hum, DEC));
+			NameValueCollection parameters(1);
+			parameters.push("humidity", String(hum, DEC));
+			hooks.triggerEvent("humedad_menor_65", parameters);
 		}
 		lastHum = hum;
 	}
@@ -44,8 +48,11 @@ void sendDht()
 {
 	float avgTemperature = dhtTemperature / dhtTimes;
 	float avgHumidity = dhtHumidity / dhtTimes;
-	String body = "temperature=" + String(avgTemperature, DEC) + "&humidity=" + String(avgHumidity, DEC);
-	hooks.triggerEvent("dht_each_30_seconds", body);
+
+	NameValueCollection parameters(2);
+	parameters.push("temperature", String(avgTemperature, DEC));
+	parameters.push("humidity", String(avgHumidity, DEC));
+	hooks.triggerEvent("dht_each_30_seconds", parameters);
 
 	dhtTemperature = 0;
 	dhtHumidity = 0;

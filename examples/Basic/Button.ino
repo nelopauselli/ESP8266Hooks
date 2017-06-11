@@ -24,6 +24,7 @@ void sendButtonChange()
 {
 	int state = digitalRead(BUTTON);
 
-	String body = String("{state: ") + (state ? "down" : "up") + String("}");
-	hooks.triggerEvent("button_change", body);
+	NameValueCollection parameters(1);
+	parameters.push("state", state ? "down" : "up");
+	hooks.triggerEvent("button_change", parameters);
 }

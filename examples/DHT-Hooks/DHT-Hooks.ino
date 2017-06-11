@@ -44,7 +44,9 @@ void setup()
 	hooks.registerEvent("humedad_mayor_65");
 	hooks.registerEvent("humedad_menor_65");
 
-	hooks.triggerEvent("start", "start=1");
+	NameValueCollection parameters(1);
+	parameters.push("start", "1");
+	hooks.triggerEvent("start", parameters);
 
 	digitalWrite(LED_BUILTIN, LOW);
 }

@@ -51,7 +51,9 @@ void setup()
 	hooks.registerAction("led_on", listenerLedOn);
 	hooks.registerAction("led_off", listenerLedOff);
 
-	hooks.triggerEvent("start", "start=1");
+	NameValueCollection parameters(1);
+	parameters.push("start", "1");
+	hooks.triggerEvent("start", parameters);
 
 	digitalWrite(LED_BUILTIN, LOW);
 }

@@ -268,7 +268,7 @@ void ESP8266Hooks::unsubscribeEvent(String eventName, String target)
 	}
 }
 
-void ESP8266Hooks::triggerEvent(String eventName, String body)
+void ESP8266Hooks::triggerEvent(String eventName, NameValueCollection values)
 {
 	// TODO: agendar los eventos y desencadenarlos cuando no esté el server activo.
 
@@ -282,14 +282,39 @@ void ESP8266Hooks::triggerEvent(String eventName, String body)
 	{
 		if (event->name == eventName)
 		{
-			Subscription* subscription = event->subscriptions;
+			Subscription *subscription = event->subscriptions;
 
 			while (subscription != NULL)
 			{
 				String host = subscription->target;
+				String pattern = subscription->pattern;
 
-				DEBUG_PRINT("Enviando hook a ");
-				DEBUG_PRINTLN(host);
+				String body = "";
+				if (pattern != NULL && pattern != "")
+				{
+					body = String(pattern);
+					for (int i = 0; i < values.length(); i++)
+					{
+						String key = values.getKey(i);
+						String value = values[key];
+						body.replace("{" + key + "}", value);
+					}
+				}
+				else
+				{
+					body = "";
+					for (int i = 0; i < values.length(); i++)
+					{
+						String key = values.getKey(i);
+						String value = values[key];
+
+						if (i > 0)
+							body += "&";
+						body += key + "=" + value;
+					}
+				}
+
+				DEBUG_PRINTLN("Enviando '" + body + "' hook a " + host);
 
 				HTTPClient http;
 				http.setTimeout(500);

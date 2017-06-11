@@ -32,6 +32,10 @@ class NameValueCollection
 		return true;
 	}
 
+	String getKey(int index){
+		return _keys[index];
+	}
+
 	String operator[](const String key)
 	{
 		for (int i = 0; i < _current; i++)
@@ -54,6 +58,9 @@ class NameValueCollection
 		return sb;
 	}
 
+	int length() {
+		return _current;
+	}
   private:
 	String _values[MAX_SIZE];
 	String _keys[MAX_SIZE];

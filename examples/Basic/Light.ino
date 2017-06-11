@@ -16,8 +16,9 @@ void readLight()
 void sendLight()
 {
 	int value = lightValue / lightTimes;
-	String body = "light=" + String(value, DEC);
-	hooks.triggerEvent("light_each_30_seconds", body);
+	NameValueCollection parameters(1);
+	parameters.push("light", String(value, DEC));
+	hooks.triggerEvent("light_each_30_seconds", parameters);
 	lightValue = 0;
 	lightTimes = 0;
 }

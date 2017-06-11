@@ -30,7 +30,7 @@ class ESP8266Hooks
 	void registerEvent(String eventName);
 	void subscribeEvent(String eventName, String target, String pattern);
 	void unsubscribeEvent(String eventName, String target);
-	void triggerEvent(String eventName, String body);
+	void triggerEvent(String eventName, NameValueCollection values);
 
 	void registerAction(char *actionName, int (*callback)(NameValueCollection));
 

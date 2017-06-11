@@ -52,7 +52,10 @@ void setup()
 
 	hooks.registerAction("show_text", textChange);
 
-	hooks.triggerEvent("start", "start=1");
+
+	NameValueCollection parameters(1);
+	parameters.push("start", "1");
+	hooks.triggerEvent("start", parameters);
 
 	digitalWrite(LED_BUILTIN, LOW);
 }
@@ -83,7 +86,10 @@ int textChange(NameValueCollection parameters)
 	lcd.setCursor(0, 1);
 	lcd.print(line2);
 
-	hooks.triggerEvent("text_change", "line1="+line1+"&line2="+line2);
+	NameValueCollection triggerParameters(2);
+	triggerParameters.push("line1", line1);
+	triggerParameters.push("line2", line2);
+	hooks.triggerEvent("text_change", triggerParameters);
 
 	return 204;
 }
