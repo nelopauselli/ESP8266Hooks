@@ -36,24 +36,22 @@ void setup()
 	}
 
 	hooks.init("IoT Luz & Botón");
-	// Use true as second parameter to empty subscriptors list
-	//hooks.init("IoT Luz & Botón", true);
 
-	hooks.registerEvent("start");
-	hooks.registerEvent("button_change");
+	hooks.registerEvent("button_change", "state={state}");
 
-	hooks.registerEvent("light_each_30_seconds");
-	hooks.registerAction("light_configure", configureLight);
+	hooks.registerEvent("light_each_30_seconds", "light={light}");
+	ValueCollection lightConfigureParameters(1);
+	lightConfigureParameters.push("limit");
+	hooks.registerAction("light_configure", lightConfigureParameters, configureLight);
 
-	hooks.registerEvent("led_change");
-	hooks.registerEvent("led_on");
-	hooks.registerEvent("led_off");
-	hooks.registerAction("led_on", listenerLedOn);
-	hooks.registerAction("led_off", listenerLedOff);
-
-	NameValueCollection parameters(1);
-	parameters.push("start", "1");
-	hooks.triggerEvent("start", parameters);
+	hooks.registerEvent("led_change", "state={state}");
+	hooks.registerEvent("led_on", "state={state}");
+	hooks.registerEvent("led_off", "state={state}");
+	
+	ValueCollection listenerLedOnParameters(0);
+	hooks.registerAction("led_on", listenerLedOnParameters, listenerLedOn);
+	ValueCollection listenerLedOffParameters(0);
+	hooks.registerAction("led_off", listenerLedOffParameters, listenerLedOff);
 
 	digitalWrite(LED_BUILTIN, LOW);
 }

@@ -35,18 +35,9 @@ void setup()
 	}
 
 	hooks.init("IoT DHT");
-	// Use true as second parameter to empty subscriptors list
-	//hooks.init("IoT Luz & Botón", true);
-
-	hooks.registerEvent("start");
-
-	hooks.registerEvent("dht_each_30_seconds");
-	hooks.registerEvent("humedad_mayor_65");
-	hooks.registerEvent("humedad_menor_65");
-
-	NameValueCollection parameters(1);
-	parameters.push("start", "1");
-	hooks.triggerEvent("start", parameters);
+	hooks.registerEvent("dht_each_30_seconds", "temperature={temperature}&humidity={humidity}");
+	hooks.registerEvent("humedad_mayor_65", "humidity={humidity}");
+	hooks.registerEvent("humedad_menor_65", "humidity={humidity}");
 
 	digitalWrite(LED_BUILTIN, LOW);
 }
