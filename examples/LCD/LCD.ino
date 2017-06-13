@@ -47,10 +47,12 @@ void setup()
 
 	hooks.init("LCD");
 
-	hooks.registerEvent("start");
-	hooks.registerEvent("text_change");
+	hooks.registerEvent("text_change", "mac={mac}&line1={line1}&line2={line2}");
 
-	hooks.registerAction("show_text", textChange);
+	ValueCollection actionParameters(2);
+	actionParameters.push("line1");
+	actionParameters.push("line2");
+	hooks.registerAction("show_text", actionParameters, showText);
 
 
 	NameValueCollection parameters(1);
@@ -73,7 +75,7 @@ void initLCD()
 	lcd.backlight();
 }
 
-int textChange(NameValueCollection parameters)
+int showText(NameValueCollection parameters)
 {
 	String line1 = parameters["line1"];
 	String line2 = parameters["line2"];

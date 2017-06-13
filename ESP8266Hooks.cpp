@@ -54,16 +54,16 @@ void ESP8266Hooks::init(String deviceName)
 
 		String event = _server.arg("event");
 		String target = _server.arg("target");
-		String pattern = _server.arg("template");
+		String format = _server.arg("template");
 
 		DEBUG_PRINT(event);
 		DEBUG_PRINT(" => ");
 		DEBUG_PRINT(target);
 		DEBUG_PRINT(" [");
-		DEBUG_PRINT(pattern);
+		DEBUG_PRINT(format);
 		DEBUG_PRINT("] ");
 
-		this->subscribeEvent(event, target, pattern);
+		this->subscribeEvent(event, target, format);
 
 		_server.send(204);
 	});
@@ -172,9 +172,9 @@ String ESP8266Hooks::definition()
 	{
 		if (event != _events)
 			body += ",";
-		body += "{\"name\": \"";
-		body += event->name;
-		body += "\", \"subscriptions\": [";
+		body += "{\"name\": \"" + event->name + "\", ";
+		body += "\"template\": \"" + event->format + "\", ";
+		body += "\"subscriptions\": [";
 
 		Subscription *subscription = event->subscriptions;
 		while (subscription != NULL)
@@ -186,7 +186,7 @@ String ESP8266Hooks::definition()
 			body += subscription->target;
 			body += "\"";
 			body += ",\"template\": \"";
-			body += subscription->pattern;
+			body += subscription->format;
 			body += "\"";
 			body += "}";
 
@@ -202,12 +202,11 @@ String ESP8266Hooks::definition()
 	for (int i = 0; i < this->_indexAction; i++)
 	{
 		String action = this->_actions[i].getActionName();
+		ValueCollection parameters = this->_actions[i].getParameters();
 
 		if (i > 0)
 			body += ",";
-		body += "\"";
-		body += action;
-		body += "\"";
+		body += "{\"name\": \""+ action + "\", \"parameters\": " + parameters.toJSON() + "}";
 	}
 	body += "]";
 
@@ -216,16 +215,17 @@ String ESP8266Hooks::definition()
 	return body;
 }
 
-void ESP8266Hooks::registerEvent(String eventName)
+void ESP8266Hooks::registerEvent(String eventName, String format)
 {
 	Event *event = new Event();
 	event->name = eventName;
+	event->format = format;
 
 	event->next = _events;
 	_events = event;
 }
 
-void ESP8266Hooks::subscribeEvent(String eventName, String target, String pattern)
+void ESP8266Hooks::subscribeEvent(String eventName, String target, String format)
 {
 	Event *event = _events;
 	while (event != NULL)
@@ -234,7 +234,7 @@ void ESP8266Hooks::subscribeEvent(String eventName, String target, String patter
 		{
 			Subscription *subscription = new Subscription();
 			subscription->target = target;
-			subscription->pattern = pattern;
+			subscription->format = format;
 			subscription->next = event->subscriptions;
 
 			event->subscriptions = subscription;
@@ -287,31 +287,19 @@ void ESP8266Hooks::triggerEvent(String eventName, NameValueCollection values)
 			while (subscription != NULL)
 			{
 				String host = subscription->target;
-				String pattern = subscription->pattern;
+				String format = subscription->format;
+				if (format == NULL || format == "")
+					format = event->format;
 
 				String body = "";
-				if (pattern != NULL && pattern != "")
+				body = String(format);
+				body.replace("{mac}", _mac);
+				body.replace("{event}", event->name);
+				for (int i = 0; i < values.length(); i++)
 				{
-					body = String(pattern);
-					for (int i = 0; i < values.length(); i++)
-					{
-						String key = values.getKey(i);
-						String value = values[key];
-						body.replace("{" + key + "}", value);
-					}
-				}
-				else
-				{
-					body = "";
-					for (int i = 0; i < values.length(); i++)
-					{
-						String key = values.getKey(i);
-						String value = values[key];
-
-						if (i > 0)
-							body += "&";
-						body += key + "=" + value;
-					}
+					String key = values.getKey(i);
+					String value = values[key];
+					body.replace("{" + key + "}", value);
 				}
 
 				DEBUG_PRINTLN("Enviando '" + body + "' hook a " + host);
@@ -369,9 +357,9 @@ void ESP8266Hooks::triggerEvent(String eventName, NameValueCollection values)
 	}
 }
 
-void ESP8266Hooks::registerAction(char *actionName, int (*callback)(NameValueCollection))
+void ESP8266Hooks::registerAction(char *actionName, ValueCollection parameters, int (*callback)(NameValueCollection))
 {
-	HookAction action(actionName, callback);
+	HookAction action(actionName, parameters, callback);
 	_actions[_indexAction++] = action;
 }
 

@@ -11,13 +11,14 @@
 
 struct Subscription {
 	String target;
-	String pattern;
+	String format;
 	Subscription* next;
 };
 
 struct Event {
 	String name;
 	Subscription* subscriptions;
+	String format;
 	Event* next;
 };
 
@@ -27,12 +28,12 @@ class ESP8266Hooks
 	ESP8266Hooks();
 	String definition();
 	void init(String deviceName);
-	void registerEvent(String eventName);
-	void subscribeEvent(String eventName, String target, String pattern);
+	void registerEvent(String eventName, String format);
+	void subscribeEvent(String eventName, String target, String format);
 	void unsubscribeEvent(String eventName, String target);
 	void triggerEvent(String eventName, NameValueCollection values);
 
-	void registerAction(char *actionName, int (*callback)(NameValueCollection));
+	void registerAction(char *actionName, ValueCollection parameters, int (*callback)(NameValueCollection));
 
 	void handleClient();
 
