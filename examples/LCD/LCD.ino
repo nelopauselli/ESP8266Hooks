@@ -34,10 +34,14 @@ void setup()
 	Serial.println("");
 	while (WiFi.status() != WL_CONNECTED)
 	{
-		delay(500);
+		delay(250);
+		digitalWrite(LED_BUILTIN, HIGH);
+		delay(250);
+		digitalWrite(LED_BUILTIN, LOW);
 		Serial.print(".");
 	}
 	Serial.println("");
+	Serial.println("connected to " + String(ssid) + ". IP: " + WiFi.localIP());
 
 	initLCD();
 	lcd.setCursor(0, 0);
