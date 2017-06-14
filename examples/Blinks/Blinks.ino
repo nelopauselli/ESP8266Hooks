@@ -31,11 +31,12 @@ void setup() {
 
 	hooks.init("IoT Blink " + String(ip[3]));
 
-	hooks.registerEvent("blink_on");
-	hooks.registerEvent("blink_off");
+	hooks.registerEvent("blink_on", "");
+	hooks.registerEvent("blink_off", "");
 
-	hooks.registerAction("led_on", listenerLedOn);
-	hooks.registerAction("led_off", listenerLedOff);
+	ValueCollection parametersLedOn(0);
+	hooks.registerAction("led_on", parametersLedOn, listenerLedOn);
+	hooks.registerAction("led_off", parametersLedOn, listenerLedOff);
 
 	Serial.println("Ready");
 	digitalWrite(LED_BUILTIN, LOW);
