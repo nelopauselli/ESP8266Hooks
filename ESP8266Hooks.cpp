@@ -2,7 +2,9 @@
 #include "ESP8266Hooks.h"
 #include <ESP8266HTTPClient.h>
 
-#define DEBUG_HOOKS
+#define HISTORY_MAX 20
+
+//#define DEBUG_HOOKS
 #ifdef DEBUG_HOOKS
 #define DEBUG_PRINT(...) Serial.print(__VA_ARGS__)
 #define DEBUG_PRINTLN(...) Serial.println(__VA_ARGS__)
@@ -223,8 +225,6 @@ String ESP8266Hooks::definition()
 
 String ESP8266Hooks::history()
 {
-	int count = 0;
-
 	String body = "[";
 
 	Message *message = _messages;
@@ -241,9 +241,6 @@ String ESP8266Hooks::history()
 		body += "\"attempts\":" + String(message->attempts, DEC) + ", ";
 		body += "\"at\":" + String(message->at, DEC) + "";
 		body += "}";
-
-		if (count++ > 10)
-			break;
 
 		message = message->next;
 	}
@@ -433,4 +430,31 @@ void ESP8266Hooks::handleClient()
 		message = message->next;
 	}
 #endif
+
+	int count = 0;
+	message = _messages;
+	while (message != NULL)
+	{
+		if (count++ > HISTORY_MAX)
+			break;
+
+		message = message->next;
+	}
+
+	if (message != NULL)
+	{
+		this->cleanMessagesAfter(message->next);
+		message->next = NULL;
+	}
+}
+
+void ESP8266Hooks::cleanMessagesAfter(Message *message)
+{
+	if (message == NULL)
+		return;
+
+	DEBUG_PRINTLN("Quitando mensaje at: " + String(message->at));
+	this->cleanMessagesAfter(message->next);
+
+	message->next = NULL;
 }
