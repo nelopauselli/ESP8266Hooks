@@ -49,6 +49,12 @@ void ESP8266Hooks::init(String deviceName)
 		_server.send(200, "application/json", body);
 	});
 
+	_server.on("/history", HTTP_GET, [&]() {
+		DEBUG_PRINTLN("sending history");
+		String body = this->history();
+		_server.send(200, "application/json", body);
+	});
+
 	_server.on("/hooks", HTTP_POST, [&]() {
 		DEBUG_PRINT("Agregando suscripción ");
 
@@ -206,11 +212,42 @@ String ESP8266Hooks::definition()
 
 		if (i > 0)
 			body += ",";
-		body += "{\"name\": \""+ action + "\", \"parameters\": " + parameters.toJSON() + "}";
+		body += "{\"name\": \"" + action + "\", \"parameters\": " + parameters.toJSON() + "}";
 	}
 	body += "]";
 
 	body += "}";
+
+	return body;
+}
+
+String ESP8266Hooks::history()
+{
+	int count = 0;
+
+	String body = "[";
+
+	Message *message = _messages;
+	while (message != NULL)
+	{
+		if (message != _messages)
+			body += ",";
+
+		body += "{";
+		body += "\"target\":\"" + message->target + "\", ";
+		body += "\"body\":\"" + message->body + "\", ";
+		body += "\"success\":\"" + String(message->success ? "yes" : "no") + "\", ";
+		body += "\"duration\":" + String(message->duration, DEC) + ", ";
+		body += "\"attempts\":" + String(message->attempts, DEC) + ", ";
+		body += "\"at\":" + String(message->at, DEC) + "";
+		body += "}";
+
+		if (count++ > 10)
+			break;
+
+		message = message->next;
+	}
+	body += "]";
 
 	return body;
 }
@@ -286,7 +323,7 @@ void ESP8266Hooks::triggerEvent(String eventName, NameValueCollection values)
 
 			while (subscription != NULL)
 			{
-				String host = subscription->target;
+				String target = subscription->target;
 				String format = subscription->format;
 				if (format == NULL || format == "")
 					format = event->format;
@@ -302,53 +339,12 @@ void ESP8266Hooks::triggerEvent(String eventName, NameValueCollection values)
 					body.replace("{" + key + "}", value);
 				}
 
-				DEBUG_PRINTLN("Enviando '" + body + "' hook a " + host);
-
-				HTTPClient http;
-				http.setTimeout(500);
-				delay(50);
-
-				int beginStart = millis();
-				bool begined = http.begin(host);
-				int beginEnd = millis();
-
-				if (begined)
-				{
-					DEBUG_PRINTF("[HTTP] Begin in %dms.\n", beginEnd - beginStart);
-
-					DEBUG_PRINTLN("Http POST...");
-
-					http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-
-					String content = "mac=" + _mac + "&event=" + eventName + "&" + body;
-
-					int requestStart = millis();
-					int httpCode = http.POST(content);
-					int requestEnd = millis();
-					//http.writeToStream(&Serial);
-
-					if (httpCode > 0)
-					{
-						// HTTP header has been send and Server response header has been handled
-						DEBUG_PRINTF("[HTTP] POST in %dms. code: %d\n", requestEnd - requestStart, httpCode);
-
-						// file found at server
-						if (httpCode == HTTP_CODE_OK)
-						{
-							String payload = http.getString();
-							DEBUG_PRINTLN(payload);
-						}
-					}
-					else
-					{
-						DEBUG_PRINTF("[HTTP] POST failed in %dms, error: %s\n", requestEnd - requestStart, http.errorToString(httpCode).c_str());
-					}
-				}
-				else
-				{
-					DEBUG_PRINTF("[HTTP] BEGIN failed in %dms\n", beginEnd - beginStart);
-				}
-				http.end();
+				DEBUG_PRINTLN("Encolando mensaje a enviar");
+				Message *message = new Message();
+				message->target = target;
+				message->body = body;
+				message->next = _messages;
+				_messages = message;
 
 				subscription = subscription->next;
 			}
@@ -366,4 +362,75 @@ void ESP8266Hooks::registerAction(char *actionName, ValueCollection parameters, 
 void ESP8266Hooks::handleClient()
 {
 	_server.handleClient();
+
+	DEBUG_PRINTLN("Iniciando envío de mensajes");
+	Message *message = _messages;
+	while (message != NULL)
+	{
+		long now = millis(); //TODO: ver que hacemos cuando se reinicia millis()
+		if (!message->success && message->attempts < 5 && message->at < now - 5000)
+		{
+			DEBUG_PRINTLN("Enviando '" + message->body + "' hook a " + message->target);
+
+			HTTPClient http;
+			http.setTimeout(500);
+
+			bool begined = http.begin(message->target);
+			message->at = now;
+
+			if (begined)
+			{
+				http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+
+				int requestStart = millis();
+				int httpCode = http.POST(message->body);
+				int requestEnd = millis();
+
+				message->duration = requestEnd - requestStart;
+				message->attempts++;
+
+				if (httpCode > 0)
+				{
+					if (httpCode < 400)
+					{
+						DEBUG_PRINTF("[HTTP] POST in %dms. code: %d\n", message->duration, httpCode);
+						message->success = true;
+					}
+					else
+					{
+						DEBUG_PRINTF("[HTTP] POST failed in %dms, error: %s\n", message->duration, http.errorToString(httpCode).c_str());
+						message->success = false;
+					}
+				}
+				else
+				{
+					DEBUG_PRINTF("[HTTP] POST failed in %dms\n", message->duration);
+					message->success = false;
+				}
+			}
+			else
+			{
+				DEBUG_PRINTLN("[HTTP] BEGIN failed");
+				message->success = false;
+			}
+			http.end();
+		}
+
+		message = message->next;
+	}
+
+#ifdef DEBUG_HOOKS
+	message = _messages;
+	while (message != NULL)
+	{
+		DEBUG_PRINT("Message to " + message->target + " ");
+		if (message->success)
+			DEBUG_PRINT(" was success ");
+		else
+			DEBUG_PRINT(" fail " + String(message->attempts) + " times");
+
+		DEBUG_PRINTLN("");
+		message = message->next;
+	}
+#endif
 }

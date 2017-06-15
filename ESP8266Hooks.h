@@ -22,6 +22,16 @@ struct Event {
 	Event* next;
 };
 
+struct Message {
+	String target = "";
+	String body = "";
+	bool success = false;
+	int duration = 0;
+	int attempts = 0;
+	long at = 0;
+	Message* next;
+};
+
 class ESP8266Hooks
 {
   public:
@@ -39,7 +49,9 @@ class ESP8266Hooks
 
   private:
 	ESP8266WebServer _server;
+	String history();
 	Event* _events = NULL;
+	Message* _messages = NULL;
 	HookAction _actions[10];
 	int _indexAction;
 	String _mac;
