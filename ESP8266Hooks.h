@@ -5,7 +5,10 @@
 #ifndef ESP8266Hooks_h
 #define ESP8266Hooks_h
 
+#ifdef ARDUINO
 #include "Arduino.h"
+#endif
+
 #include "Hooks.cpp"
 #include "HookAction.cpp"
 #include <ESP8266WebServer.h>

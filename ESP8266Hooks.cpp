@@ -1,4 +1,7 @@
+#ifdef ARDUINO
 #include "Arduino.h"
+#endif
+
 #include "ESP8266Hooks.h"
 #include <ESP8266HTTPClient.h>
 

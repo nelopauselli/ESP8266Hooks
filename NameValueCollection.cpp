@@ -5,7 +5,10 @@
 #ifndef NameValueCollection_h
 #define NameValueCollection_h
 
+#ifdef ARDUINO
 #include "Arduino.h"
+#endif
+
 #include "assert.h"
 #define MAX_SIZE 10
 

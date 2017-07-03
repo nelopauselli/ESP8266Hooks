@@ -5,7 +5,10 @@
 #ifndef HookAction_h
 #define HookAction_h
 
+#ifdef ARDUINO
 #include "Arduino.h"
+#endif
+
 #include "NameValueCollection.cpp"
 #include "ValueCollection.cpp"
 

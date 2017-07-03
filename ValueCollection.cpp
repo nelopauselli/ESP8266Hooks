@@ -5,7 +5,10 @@
 #ifndef ValueCollection_h
 #define ValueCollection_h
 
+#ifdef ARDUINO
 #include "Arduino.h"
+#endif
+
 #include "assert.h"
 #define MAX_SIZE 10
 
