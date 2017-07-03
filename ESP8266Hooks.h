@@ -6,6 +6,7 @@
 #define ESP8266Hooks_h
 
 #include "Arduino.h"
+#include "Hooks.cpp"
 #include "HookAction.cpp"
 #include <ESP8266WebServer.h>
 
@@ -52,13 +53,13 @@ class ESP8266Hooks
 
   private:
 	ESP8266WebServer _server;
+	Hooks* hooks = NULL;
 	String history();
 	void cleanMessagesAfter(Message *message);
 	Event *_events = NULL;
 	Message *_messages = NULL;
 	HookAction _actions[10];
 	int _indexAction;
-	String _mac;
 	String _deviceName;
 };
 

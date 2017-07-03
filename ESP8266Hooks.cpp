@@ -20,19 +20,21 @@ ESP8266Hooks::ESP8266Hooks()
 	unsigned char mac[6];
 	WiFi.macAddress(mac);
 
-	_mac = "";
+	String mac2 = "";
 	for (int i = 0; i < 6; ++i)
 	{
 		String atom = String(mac[i], HEX);
 		if (atom.length() < 2)
-			_mac += String("0") + atom;
+			mac2 += String("0") + atom;
 		else
-			_mac += atom;
+			mac2 += atom;
 
 		if (i < 5)
-			_mac += ':';
+			mac2 += ':';
 	}
-	_mac.toUpperCase();
+	mac2.toUpperCase();
+
+	hooks = new Hooks(mac2.c_str());
 }
 
 void ESP8266Hooks::init(String deviceName)
@@ -171,7 +173,7 @@ String ESP8266Hooks::definition()
 	body += "\", ";
 
 	body += "\"mac\": \"";
-	body += _mac;
+	body += hooks->get_mac();
 	body += "\", ";
 
 	body += "\"events\": [";
@@ -327,7 +329,7 @@ void ESP8266Hooks::triggerEvent(String eventName, NameValueCollection values)
 
 				String body = "";
 				body = String(format);
-				body.replace("{mac}", _mac);
+				body.replace("{mac}", hooks->get_mac());
 				body.replace("{event}", event->name);
 				for (int i = 0; i < values.length(); i++)
 				{
