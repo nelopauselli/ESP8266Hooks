@@ -53,7 +53,7 @@ void ESP8266Hooks::init(String deviceName)
 
 	_server.on("/history", HTTP_GET, [&]() {
 		DEBUG_PRINTLN("sending history");
-		String body = this->history();
+		String body = hooks->get_history();
 		_server.send(200, "application/json", body);
 	});
 
@@ -221,11 +221,6 @@ String ESP8266Hooks::definition()
 	body += "}";
 
 	return body;
-}
-
-String ESP8266Hooks::history()
-{
-	return hooks->get_history();
 }
 
 void ESP8266Hooks::registerEvent(String eventName, String format)

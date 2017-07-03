@@ -28,8 +28,6 @@ class ESP8266Hooks
   private:
 	ESP8266WebServer _server;
 	Hooks* hooks = NULL;
-	String history();
-	void cleanMessagesAfter(Message *message);
 	HookAction _actions[10];
 	int _indexAction;
 	String _deviceName;
