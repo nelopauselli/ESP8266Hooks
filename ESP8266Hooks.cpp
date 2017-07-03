@@ -47,7 +47,7 @@ void ESP8266Hooks::init(const char* deviceName)
 
 	_server.on("/hooks", HTTP_GET, [&]() {
 		DEBUG_PRINTLN("enviando hooks");
-		String body = this->definition();
+		String body = hooks->definition();
 		_server.send(200, "application/json", body);
 	});
 
@@ -114,17 +114,9 @@ void ESP8266Hooks::init(const char* deviceName)
 
 		DEBUG_PRINTLN("Buscando y lanzando accion");
 
-		for (int i = 0; i < _indexAction; i++)
-		{
-			HookAction hookAction = _actions[i];
-			if (actionName == hookAction.getActionName())
-			{
-				DEBUG_PRINT("Desencadenando accion con los parametros: ");
-				DEBUG_PRINTLN(parameters.toString());
-				int statusCode = hookAction.invoke(parameters);
-				_server.send(statusCode);
-			}
-		}
+		int statusCode = hooks->triggerAction(actionName, parameters);
+
+		_server.send(statusCode);
 	});
 
 	_server.on("/", HTTP_GET, [&]() {
@@ -160,67 +152,6 @@ void ESP8266Hooks::init(const char* deviceName)
 	});
 
 	_server.begin();
-}
-
-String ESP8266Hooks::definition()
-{
-	String body = "{";
-
-	body += "\"name\": \"";
-	body += hooks->get_deviceName();
-	body += "\", ";
-
-	body += "\"mac\": \"";
-	body += hooks->get_mac();
-	body += "\", ";
-
-	body += "\"events\": [";
-	Event *event = hooks->get_events();
-	while (event != NULL)
-	{
-		if (event != hooks->get_events())
-			body += ",";
-		body += "{\"name\": \"" + event->name + "\", ";
-		body += "\"template\": \"" + event->format + "\", ";
-		body += "\"subscriptions\": [";
-
-		Subscription *subscription = event->subscriptions;
-		while (subscription != NULL)
-		{
-			if (subscription != event->subscriptions)
-				body += ",";
-			body += "{";
-			body += "\"target\": \"";
-			body += subscription->target;
-			body += "\"";
-			body += ",\"template\": \"";
-			body += subscription->format;
-			body += "\"";
-			body += "}";
-
-			subscription = subscription->next;
-		}
-		body += "]}";
-
-		event = event->next;
-	}
-	body += "], ";
-
-	body += "\"actions\": [";
-	for (int i = 0; i < this->_indexAction; i++)
-	{
-		String action = this->_actions[i].getActionName();
-		ValueCollection parameters = this->_actions[i].getParameters();
-
-		if (i > 0)
-			body += ",";
-		body += "{\"name\": \"" + action + "\", \"parameters\": " + parameters.toJSON() + "}";
-	}
-	body += "]";
-
-	body += "}";
-
-	return body;
 }
 
 void ESP8266Hooks::registerEvent(String eventName, String format)
@@ -260,7 +191,7 @@ void ESP8266Hooks::triggerEvent(String eventName, NameValueCollection values)
 void ESP8266Hooks::registerAction(char *actionName, ValueCollection parameters, int (*callback)(NameValueCollection))
 {
 	HookAction action(actionName, parameters, callback);
-	_actions[_indexAction++] = action;
+	hooks->registerAction(action);
 }
 
 void ESP8266Hooks::handleClient()

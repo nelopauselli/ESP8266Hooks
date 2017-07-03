@@ -4,6 +4,7 @@
 #define HISTORY_MAX 20
 
 #include "NameValueCollection.cpp"
+#include "HookAction.cpp"
 
 //#define DEBUG_HOOKS
 #ifdef DEBUG_HOOKS
@@ -51,22 +52,72 @@ class Hooks
 		_deviceName = deviceName;
 	}
 
-	const char *get_mac()
-	{
-		return _mac;
-	}
 
-	const char *get_deviceName(){
-		return _deviceName;
-	}
 	Message *get_messages()
 	{
 		return _messages;
 	}
 
-	Event *get_events()
+
+	String definition()
 	{
-		return _events;
+		String body = "{";
+
+		body += "\"name\": \"";
+		body += _deviceName;
+		body += "\", ";
+
+		body += "\"mac\": \"";
+		body += _mac;
+		body += "\", ";
+
+		body += "\"events\": [";
+		Event *event = _events;
+		while (event != NULL)
+		{
+			if (event != _events)
+				body += ",";
+			body += "{\"name\": \"" + event->name + "\", ";
+			body += "\"template\": \"" + event->format + "\", ";
+			body += "\"subscriptions\": [";
+
+			Subscription *subscription = event->subscriptions;
+			while (subscription != NULL)
+			{
+				if (subscription != event->subscriptions)
+					body += ",";
+				body += "{";
+				body += "\"target\": \"";
+				body += subscription->target;
+				body += "\"";
+				body += ",\"template\": \"";
+				body += subscription->format;
+				body += "\"";
+				body += "}";
+
+				subscription = subscription->next;
+			}
+			body += "]}";
+
+			event = event->next;
+		}
+		body += "], ";
+
+		body += "\"actions\": [";
+		for (int i = 0; i < _indexAction; i++)
+		{
+			String action = _actions[i].getActionName();
+			ValueCollection parameters = this->_actions[i].getParameters();
+
+			if (i > 0)
+				body += ",";
+			body += "{\"name\": \"" + action + "\", \"parameters\": " + parameters.toJSON() + "}";
+		}
+		body += "]";
+
+		body += "}";
+
+		return body;
 	}
 
 	void registerEvent(Event *event)
@@ -182,6 +233,26 @@ class Hooks
 		return body;
 	}
 
+	void registerAction(HookAction action)
+	{
+		_actions[_indexAction++] = action;
+	}
+
+	int triggerAction(String actionName, NameValueCollection parameters)
+	{
+		for (int i = 0; i < _indexAction; i++)
+		{
+			HookAction hookAction = _actions[i];
+			if (actionName == hookAction.getActionName())
+			{
+				DEBUG_PRINT("Desencadenando accion con los parametros: ");
+				DEBUG_PRINTLN(parameters.toString());
+				return hookAction.invoke(parameters);
+			}
+		}
+		return 404;
+	}
+
 	void cleanHistory()
 	{
 		int count = 0;
@@ -217,6 +288,8 @@ class Hooks
 	const char *_deviceName;
 	Event *_events = NULL;
 	Message *_messages = NULL;
+	HookAction _actions[10];
+	int _indexAction;
 };
 
 #endif

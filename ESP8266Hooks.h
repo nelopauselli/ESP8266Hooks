@@ -14,7 +14,6 @@ class ESP8266Hooks
 {
   public:
 	ESP8266Hooks();
-	String definition();
 	void init(const char* deviceName);
 	void registerEvent(String eventName, String format);
 	void subscribeEvent(String eventName, String target, String format);
@@ -28,8 +27,6 @@ class ESP8266Hooks
   private:
 	ESP8266WebServer _server;
 	Hooks* hooks = NULL;
-	HookAction _actions[10];
-	int _indexAction;
 };
 
 #endif
