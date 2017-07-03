@@ -2,8 +2,6 @@
 #include "ESP8266Hooks.h"
 #include <ESP8266HTTPClient.h>
 
-#define HISTORY_MAX 20
-
 //#define DEBUG_HOOKS
 #ifdef DEBUG_HOOKS
 #define DEBUG_PRINT(...) Serial.print(__VA_ARGS__)
@@ -177,10 +175,10 @@ String ESP8266Hooks::definition()
 	body += "\", ";
 
 	body += "\"events\": [";
-	Event *event = _events;
+	Event *event = hooks->get_events();
 	while (event != NULL)
 	{
-		if (event != _events)
+		if (event != hooks->get_events())
 			body += ",";
 		body += "{\"name\": \"" + event->name + "\", ";
 		body += "\"template\": \"" + event->format + "\", ";
@@ -227,28 +225,7 @@ String ESP8266Hooks::definition()
 
 String ESP8266Hooks::history()
 {
-	String body = "[";
-
-	Message *message = _messages;
-	while (message != NULL)
-	{
-		if (message != _messages)
-			body += ",";
-
-		body += "{";
-		body += "\"target\":\"" + message->target + "\", ";
-		body += "\"body\":\"" + message->body + "\", ";
-		body += "\"success\":\"" + String(message->success ? "yes" : "no") + "\", ";
-		body += "\"duration\":" + String(message->duration, DEC) + ", ";
-		body += "\"attempts\":" + String(message->attempts, DEC) + ", ";
-		body += "\"at\":" + String(message->at, DEC) + "";
-		body += "}";
-
-		message = message->next;
-	}
-	body += "]";
-
-	return body;
+	return hooks->get_history();
 }
 
 void ESP8266Hooks::registerEvent(String eventName, String format)
@@ -257,51 +234,21 @@ void ESP8266Hooks::registerEvent(String eventName, String format)
 	event->name = eventName;
 	event->format = format;
 
-	event->next = _events;
-	_events = event;
+	hooks->registerEvent(event);
 }
 
 void ESP8266Hooks::subscribeEvent(String eventName, String target, String format)
 {
-	Event *event = _events;
-	while (event != NULL)
-	{
-		if (event->name == eventName)
-		{
-			Subscription *subscription = new Subscription();
-			subscription->target = target;
-			subscription->format = format;
-			subscription->next = event->subscriptions;
+	Subscription *subscription = new Subscription();
+	subscription->target = target;
+	subscription->format = format;
 
-			event->subscriptions = subscription;
-
-			break;
-		}
-		event = event->next;
-	}
+	hooks->subscribeEvent(eventName, subscription);
 }
 
 void ESP8266Hooks::unsubscribeEvent(String eventName, String target)
 {
-	Event *event = _events;
-	while (event != NULL)
-	{
-		if (event->name == eventName)
-		{
-			Subscription *subscription = event->subscriptions;
-			while (subscription != NULL)
-			{
-				if (subscription->target == target)
-				{
-					//TODO: quitar Subscription de la pila
-					break;
-				}
-				subscription = subscription->next;
-			}
-			break;
-		}
-		event = event->next;
-	}
+	hooks->unsubscribeEvent(eventName, target);
 }
 
 void ESP8266Hooks::triggerEvent(String eventName, NameValueCollection values)
@@ -312,44 +259,7 @@ void ESP8266Hooks::triggerEvent(String eventName, NameValueCollection values)
 	DEBUG_PRINT(eventName);
 	DEBUG_PRINTLN("'");
 
-	Event *event = _events;
-
-	while (event != NULL)
-	{
-		if (event->name == eventName)
-		{
-			Subscription *subscription = event->subscriptions;
-
-			while (subscription != NULL)
-			{
-				String target = subscription->target;
-				String format = subscription->format;
-				if (format == NULL || format == "")
-					format = event->format;
-
-				String body = "";
-				body = String(format);
-				body.replace("{mac}", hooks->get_mac());
-				body.replace("{event}", event->name);
-				for (int i = 0; i < values.length(); i++)
-				{
-					String key = values.getKey(i);
-					String value = values[key];
-					body.replace("{" + key + "}", value);
-				}
-
-				DEBUG_PRINTLN("Encolando mensaje a enviar");
-				Message *message = new Message();
-				message->target = target;
-				message->body = body;
-				message->next = _messages;
-				_messages = message;
-
-				subscription = subscription->next;
-			}
-		}
-		event = event->next;
-	}
+	hooks->triggerEvent(eventName, values);
 }
 
 void ESP8266Hooks::registerAction(char *actionName, ValueCollection parameters, int (*callback)(NameValueCollection))
@@ -363,7 +273,7 @@ void ESP8266Hooks::handleClient()
 	_server.handleClient();
 
 	DEBUG_PRINTLN("Iniciando envío de mensajes");
-	Message *message = _messages;
+	Message *message = hooks->get_messages();
 	while (message != NULL)
 	{
 		long now = millis(); //TODO: ver que hacemos cuando se reinicia millis()
@@ -419,7 +329,7 @@ void ESP8266Hooks::handleClient()
 	}
 
 #ifdef DEBUG_HOOKS
-	message = _messages;
+	message = hooks->get_messages();
 	while (message != NULL)
 	{
 		DEBUG_PRINT("Message to " + message->target + " ");
@@ -433,30 +343,6 @@ void ESP8266Hooks::handleClient()
 	}
 #endif
 
-	int count = 0;
-	message = _messages;
-	while (message != NULL)
-	{
-		if (count++ > HISTORY_MAX)
-			break;
+	hooks->cleanHistory();
 
-		message = message->next;
-	}
-
-	if (message != NULL)
-	{
-		this->cleanMessagesAfter(message->next);
-		message->next = NULL;
-	}
-}
-
-void ESP8266Hooks::cleanMessagesAfter(Message *message)
-{
-	if (message == NULL)
-		return;
-
-	DEBUG_PRINTLN("Quitando mensaje at: " + String(message->at));
-	this->cleanMessagesAfter(message->next);
-
-	message->next = NULL;
 }

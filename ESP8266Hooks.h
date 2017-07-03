@@ -10,32 +10,6 @@
 #include "HookAction.cpp"
 #include <ESP8266WebServer.h>
 
-struct Subscription
-{
-	String target;
-	String format;
-	Subscription *next;
-};
-
-struct Event
-{
-	String name;
-	Subscription *subscriptions;
-	String format;
-	Event *next;
-};
-
-struct Message
-{
-	String target = "";
-	String body = "";
-	bool success = false;
-	int duration = 0;
-	int attempts = 0;
-	long at = 0;
-	Message *next;
-};
-
 class ESP8266Hooks
 {
   public:
@@ -56,8 +30,6 @@ class ESP8266Hooks
 	Hooks* hooks = NULL;
 	String history();
 	void cleanMessagesAfter(Message *message);
-	Event *_events = NULL;
-	Message *_messages = NULL;
 	HookAction _actions[10];
 	int _indexAction;
 	String _deviceName;
