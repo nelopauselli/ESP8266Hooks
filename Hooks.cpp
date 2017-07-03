@@ -45,9 +45,10 @@ struct Message
 class Hooks
 {
   public:
-	Hooks(const char *mac)
+	Hooks(const char *mac, const char *deviceName)
 	{
 		_mac = mac;
+		_deviceName = deviceName;
 	}
 
 	const char *get_mac()
@@ -55,12 +56,16 @@ class Hooks
 		return _mac;
 	}
 
+	const char *get_deviceName(){
+		return _deviceName;
+	}
 	Message *get_messages()
 	{
 		return _messages;
 	}
 
-	Event * get_events(){
+	Event *get_events()
+	{
 		return _events;
 	}
 
@@ -70,7 +75,7 @@ class Hooks
 		_events = event;
 	}
 
-	void subscribeEvent(String eventName, Subscription* subscription)
+	void subscribeEvent(String eventName, Subscription *subscription)
 	{
 		Event *event = _events;
 		while (event != NULL)
@@ -85,7 +90,7 @@ class Hooks
 			event = event->next;
 		}
 	}
-	
+
 	void unsubscribeEvent(String eventName, String target)
 	{
 		Event *event = _events;
@@ -209,6 +214,7 @@ class Hooks
 
   private:
 	const char *_mac;
+	const char *_deviceName;
 	Event *_events = NULL;
 	Message *_messages = NULL;
 };

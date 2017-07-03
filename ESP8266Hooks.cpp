@@ -15,6 +15,10 @@
 
 ESP8266Hooks::ESP8266Hooks()
 {
+}
+
+void ESP8266Hooks::init(const char* deviceName)
+{
 	unsigned char mac[6];
 	WiFi.macAddress(mac);
 
@@ -32,12 +36,8 @@ ESP8266Hooks::ESP8266Hooks()
 	}
 	mac2.toUpperCase();
 
-	hooks = new Hooks(mac2.c_str());
-}
+	hooks = new Hooks(mac2.c_str(), deviceName);
 
-void ESP8266Hooks::init(String deviceName)
-{
-	_deviceName = deviceName;
 	_server = ESP8266WebServer(80);
 
 	_server.on("/ping", HTTP_GET, [&]() {
@@ -167,7 +167,7 @@ String ESP8266Hooks::definition()
 	String body = "{";
 
 	body += "\"name\": \"";
-	body += _deviceName;
+	body += hooks->get_deviceName();
 	body += "\", ";
 
 	body += "\"mac\": \"";
@@ -339,5 +339,4 @@ void ESP8266Hooks::handleClient()
 #endif
 
 	hooks->cleanHistory();
-
 }
