@@ -20,7 +20,7 @@ ESP8266Hooks::ESP8266Hooks()
 {
 }
 
-void ESP8266Hooks::init(const char* deviceName)
+void ESP8266Hooks::init(const char *deviceName)
 {
 	unsigned char mac[6];
 	WiFi.macAddress(mac);
@@ -74,7 +74,11 @@ void ESP8266Hooks::init(const char* deviceName)
 		DEBUG_PRINT(format);
 		DEBUG_PRINT("] ");
 
-		this->subscribeEvent(event, target, format);
+		Subscription *subscription = new Subscription();
+		subscription->target = target;
+		subscription->format = format;
+
+		hooks->subscribeEvent(event, subscription);
 
 		_server.send(204);
 	});
@@ -89,7 +93,7 @@ void ESP8266Hooks::init(const char* deviceName)
 		DEBUG_PRINT(" => ");
 		DEBUG_PRINTLN(target);
 
-		this->unsubscribeEvent(event, target);
+		hooks->unsubscribeEvent(event, target);
 
 		_server.send(204);
 	});
@@ -164,20 +168,6 @@ void ESP8266Hooks::registerEvent(String eventName, String format)
 	event->format = format;
 
 	hooks->registerEvent(event);
-}
-
-void ESP8266Hooks::subscribeEvent(String eventName, String target, String format)
-{
-	Subscription *subscription = new Subscription();
-	subscription->target = target;
-	subscription->format = format;
-
-	hooks->subscribeEvent(eventName, subscription);
-}
-
-void ESP8266Hooks::unsubscribeEvent(String eventName, String target)
-{
-	hooks->unsubscribeEvent(eventName, target);
 }
 
 void ESP8266Hooks::triggerEvent(String eventName, NameValueCollection values)
