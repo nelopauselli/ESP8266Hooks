@@ -50,7 +50,7 @@ void ESP8266Hooks::init(const char *deviceName)
 
 	_server.on("/hooks", HTTP_GET, [&]() {
 		DEBUG_PRINTLN("enviando hooks");
-		String body = hooks->definition();
+		String body = hooks->get_definition();
 		_server.send(200, "application/json", body);
 	});
 
@@ -126,32 +126,6 @@ void ESP8266Hooks::init(const char *deviceName)
 		_server.send(statusCode);
 	});
 
-	_server.on("/", HTTP_GET, [&]() {
-		String content = "";
-		content += "<html>";
-		content += "<head>";
-		content += "<title>IoT settings</title>";
-		content += "</head>";
-		content += "<body>";
-		content += "<h1>Settings</h1>";
-		content += "<form action='/settings' method='GET'>";
-		content += "<div>";
-		content += "<label>SSID:</label>";
-		content += "<input type='text' name='ssid' />";
-		content += "</div>";
-		content += "<div>";
-		content += "<label>PASSWORD:</label>";
-		content += "<input type='password' name='pass' />";
-		content += "</div>";
-		content += "<div>";
-		content += "<input type='submit' value='Save' />";
-		content += "</div>";
-		content += "</form>";
-		content += "</body>";
-		content += "</html>";
-		_server.send(200, "text/html", content);
-	});
-
 	_server.onNotFound([&]() {
 		String path = _server.uri();
 		DEBUG_PRINTLN("RESPONSE NOT FOUND FOR: " + path);
@@ -172,12 +146,6 @@ void ESP8266Hooks::registerEvent(String eventName, String format)
 
 void ESP8266Hooks::triggerEvent(String eventName, NameValueCollection values)
 {
-	// TODO: agendar los eventos y desencadenarlos cuando no esté el server activo.
-
-	DEBUG_PRINT("desencadenado '");
-	DEBUG_PRINT(eventName);
-	DEBUG_PRINTLN("'");
-
 	hooks->triggerEvent(eventName, values);
 }
 

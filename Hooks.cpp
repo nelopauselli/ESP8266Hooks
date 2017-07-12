@@ -53,14 +53,12 @@ class Hooks
 		_deviceName = deviceName;
 	}
 
-
 	Message *get_messages()
 	{
 		return _messages;
 	}
 
-
-	String definition()
+	String get_definition()
 	{
 		String body = "{";
 
@@ -169,6 +167,8 @@ class Hooks
 
 	void triggerEvent(String eventName, NameValueCollection values)
 	{
+		DEBUG_PRINT("desencadenado '");DEBUG_PRINT(eventName);DEBUG_PRINTLN("'");
+
 		Event *event = _events;
 
 		while (event != NULL)
