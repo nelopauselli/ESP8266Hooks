@@ -190,9 +190,9 @@ class Hooks
 					body.replace("{event}", event->name);
 					for (int i = 0; i < values.length(); i++)
 					{
-						String key = values.getKey(i);
-						String value = values[key];
-						body.replace("{" + key + "}", value);
+						const char* key = values.getKey(i);
+						const char* value = values[key];
+						body.replace("{" + String(key) + "}", String(value));
 					}
 
 					DEBUG_PRINTLN("Encolando mensaje a enviar");
@@ -247,8 +247,16 @@ class Hooks
 			HookAction hookAction = _actions[i];
 			if (actionName == hookAction.getActionName())
 			{
-				DEBUG_PRINT("Desencadenando accion con los parametros: ");
-				DEBUG_PRINTLN(parameters.toString());
+				DEBUG_PRINTLN("Desencadenando accion con los parametros: ");
+				for(int i=0;i<parameters.length();i++){
+					DEBUG_PRINT("\t");
+					
+					const char* key = parameters.getKey(i);
+					DEBUG_PRINT(key);DEBUG_PRINT(":");
+
+					const char* value = parameters[key];
+					DEBUG_PRINTLN(value);
+				}
 				return hookAction.invoke(parameters);
 			}
 		}

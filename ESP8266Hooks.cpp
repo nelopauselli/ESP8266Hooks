@@ -118,7 +118,9 @@ void ESP8266Hooks::init(const char *deviceName, int port)
 		NameValueCollection parameters(_server->args());
 		for (int i = 0; i < _server->args(); i++)
 		{
-			parameters.push(_server->argName(i), _server->arg(i));
+			const char* key = _server->argName(i).c_str();
+			const char* value = _server->arg(i).c_str();
+			parameters.push(key, value);
 		}
 
 		DEBUG_PRINTLN("Buscando y lanzando accion");
