@@ -46,8 +46,9 @@ struct Message
 class Hooks
 {
   public:
-	Hooks(const char *mac, const char *deviceName)
+	Hooks(String mac, const char *deviceName)
 	{
+		Serial.println(mac);
 		_mac = mac;
 		_deviceName = deviceName;
 	}
@@ -68,6 +69,7 @@ class Hooks
 		body += "\", ";
 
 		body += "\"mac\": \"";
+		Serial.println(_mac);
 		body += _mac;
 		body += "\", ";
 
@@ -284,7 +286,7 @@ class Hooks
 	}
 
   private:
-	const char *_mac;
+	String _mac;
 	const char *_deviceName;
 	Event *_events = NULL;
 	Message *_messages = NULL;

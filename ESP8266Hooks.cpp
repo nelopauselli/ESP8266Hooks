@@ -39,7 +39,7 @@ void ESP8266Hooks::init(const char *deviceName)
 	}
 	mac2.toUpperCase();
 
-	hooks = new Hooks(mac2.c_str(), deviceName);
+	hooks = new Hooks(mac2, deviceName);
 
 	_server = ESP8266WebServer(80);
 
