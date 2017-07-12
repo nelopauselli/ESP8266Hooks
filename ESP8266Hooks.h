@@ -15,9 +15,9 @@
 
 class ESP8266Hooks
 {
-  public:
+public:
 	ESP8266Hooks();
-	void init(const char* deviceName);
+	void init(const char *deviceName, int port=80);
 	void registerEvent(String eventName, String format);
 	void triggerEvent(String eventName, NameValueCollection values);
 
@@ -25,9 +25,9 @@ class ESP8266Hooks
 
 	void handleClient();
 
-  private:
-	ESP8266WebServer _server;
-	Hooks* hooks = NULL;
+private:
+	ESP8266WebServer *_server = NULL;
+	Hooks *hooks = NULL;
 };
 
 #endif
