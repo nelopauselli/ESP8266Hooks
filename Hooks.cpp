@@ -19,23 +19,23 @@
 
 struct Subscription
 {
-	String target;
-	String format;
+	const char *target;
+	const char *format;
 	Subscription *next;
 };
 
 struct Event
 {
-	const char* name;
+	const char *name;
 	Subscription *subscriptions;
-	String format;
+	const char *format;
 	Event *next;
 };
 
 struct Message
 {
-	String target = "";
-	String body = "";
+	const char *target = "";
+	const char *body = "";
 	bool success = false;
 	int duration = 0;
 	int attempts = 0;
@@ -78,7 +78,7 @@ class Hooks
 			if (event != _events)
 				body += ",";
 			body += "{\"name\": \"" + String(event->name) + "\", ";
-			body += "\"template\": \"" + event->format + "\", ";
+			body += "\"template\": \"" + String(event->format) + "\", ";
 			body += "\"subscriptions\": [";
 
 			Subscription *subscription = event->subscriptions;
@@ -88,10 +88,10 @@ class Hooks
 					body += ",";
 				body += "{";
 				body += "\"target\": \"";
-				body += subscription->target;
+				body += String(subscription->target);
 				body += "\"";
 				body += ",\"template\": \"";
-				body += subscription->format;
+				body += String(subscription->format);
 				body += "\"";
 				body += "}";
 
@@ -131,7 +131,7 @@ class Hooks
 		Event *event = _events;
 		while (event != NULL)
 		{
-			if (strcmp(event->name, eventName)==0)
+			if (strcmp(event->name, eventName) == 0)
 			{
 				subscription->next = event->subscriptions;
 				event->subscriptions = subscription;
@@ -142,17 +142,17 @@ class Hooks
 		}
 	}
 
-	void unsubscribeEvent(const char *eventName, String target)
+	void unsubscribeEvent(const char *eventName, const char* target)
 	{
 		Event *event = _events;
 		while (event != NULL)
 		{
-			if (strcmp(event->name, eventName)==0)
+			if (strcmp(event->name, eventName) == 0)
 			{
 				Subscription *subscription = event->subscriptions;
 				while (subscription != NULL)
 				{
-					if (subscription->target == target)
+					if (strcmp(subscription->target, target)==0)
 					{
 						//TODO: quitar Subscription de la pila
 						break;
@@ -167,21 +167,23 @@ class Hooks
 
 	void triggerEvent(const char *eventName, NameValueCollection values)
 	{
-		DEBUG_PRINT("desencadenado '");DEBUG_PRINT(eventName);DEBUG_PRINTLN("'");
+		DEBUG_PRINT("desencadenado '");
+		DEBUG_PRINT(eventName);
+		DEBUG_PRINTLN("'");
 
 		Event *event = _events;
 
 		while (event != NULL)
 		{
-			if (strcmp(event->name, eventName)==0)
+			if (strcmp(event->name, eventName) == 0)
 			{
 				Subscription *subscription = event->subscriptions;
 
 				while (subscription != NULL)
 				{
-					String target = subscription->target;
-					String format = subscription->format;
-					if (format == NULL || format == "")
+					const char* target = subscription->target;
+					const char* format = subscription->format;
+					if (format == NULL || format == '\0')
 						format = event->format;
 
 					String body = "";
@@ -190,15 +192,15 @@ class Hooks
 					body.replace("{event}", String(event->name));
 					for (int i = 0; i < values.length(); i++)
 					{
-						const char* key = values.getKey(i);
-						const char* value = values[key];
+						const char *key = values.getKey(i);
+						const char *value = values[key];
 						body.replace("{" + String(key) + "}", String(value));
 					}
 
 					DEBUG_PRINTLN("Encolando mensaje a enviar");
 					Message *message = new Message();
 					message->target = target;
-					message->body = body;
+					message->body = body.c_str();
 					message->next = _messages;
 					_messages = message;
 
@@ -220,8 +222,8 @@ class Hooks
 				body += ",";
 
 			body += "{";
-			body += "\"target\":\"" + message->target + "\", ";
-			body += "\"body\":\"" + message->body + "\", ";
+			body += "\"target\":\"" + String(message->target) + "\", ";
+			body += "\"body\":\"" + String(message->body) + "\", ";
 			body += "\"success\":\"" + String(message->success ? "yes" : "no") + "\", ";
 			body += "\"duration\":" + String(message->duration, DEC) + ", ";
 			body += "\"attempts\":" + String(message->attempts, DEC) + ", ";
@@ -248,13 +250,15 @@ class Hooks
 			if (actionName == hookAction.getActionName())
 			{
 				DEBUG_PRINTLN("Desencadenando accion con los parametros: ");
-				for(int i=0;i<parameters.length();i++){
+				for (int i = 0; i < parameters.length(); i++)
+				{
 					DEBUG_PRINT("\t");
-					
-					const char* key = parameters.getKey(i);
-					DEBUG_PRINT(key);DEBUG_PRINT(":");
 
-					const char* value = parameters[key];
+					const char *key = parameters.getKey(i);
+					DEBUG_PRINT(key);
+					DEBUG_PRINT(":");
+
+					const char *value = parameters[key];
 					DEBUG_PRINTLN(value);
 				}
 				return hookAction.invoke(parameters);

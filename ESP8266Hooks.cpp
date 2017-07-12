@@ -22,8 +22,9 @@ ESP8266Hooks::ESP8266Hooks()
 
 void ESP8266Hooks::init(const char *deviceName, int port)
 {
-	DEBUG_PRINT("Init Hooks on port ");DEBUG_PRINTLN(port);
-	
+	DEBUG_PRINT("Init Hooks on port ");
+	DEBUG_PRINTLN(port);
+
 	unsigned char mac[6];
 	WiFi.macAddress(mac);
 
@@ -66,8 +67,8 @@ void ESP8266Hooks::init(const char *deviceName, int port)
 		DEBUG_PRINT("Agregando suscripción ");
 
 		const char *eventName = _server->arg("event").c_str();
-		String target = _server->arg("target");
-		String format = _server->arg("template");
+		const char *target = _server->arg("target").c_str();
+		const char *format = _server->arg("template").c_str();
 
 		DEBUG_PRINT(eventName);
 		DEBUG_PRINT(" => ");
@@ -89,7 +90,7 @@ void ESP8266Hooks::init(const char *deviceName, int port)
 		DEBUG_PRINT("Eliminando suscripción ");
 
 		const char *eventName = _server->arg("event").c_str();
-		String target = _server->arg("target");
+		const char *target = _server->arg("target").c_str();
 
 		DEBUG_PRINT(eventName);
 		DEBUG_PRINT(" => ");
@@ -118,8 +119,8 @@ void ESP8266Hooks::init(const char *deviceName, int port)
 		NameValueCollection parameters(_server->args());
 		for (int i = 0; i < _server->args(); i++)
 		{
-			const char* key = _server->argName(i).c_str();
-			const char* value = _server->arg(i).c_str();
+			const char *key = _server->argName(i).c_str();
+			const char *value = _server->arg(i).c_str();
 			parameters.push(key, value);
 		}
 
@@ -139,7 +140,7 @@ void ESP8266Hooks::init(const char *deviceName, int port)
 	_server->begin();
 }
 
-void ESP8266Hooks::registerEvent(const char *eventName, String format)
+void ESP8266Hooks::registerEvent(const char *eventName, const char *format)
 {
 	Event *event = new Event();
 	event->name = eventName;

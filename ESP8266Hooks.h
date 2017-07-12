@@ -18,7 +18,7 @@ class ESP8266Hooks
 public:
 	ESP8266Hooks();
 	void init(const char *deviceName, int port=80);
-	void registerEvent(const char *eventName, String format);
+	void registerEvent(const char *eventName, const char * format);
 	void triggerEvent(const char *eventName, NameValueCollection values);
 
 	void registerAction(char *actionName, ValueCollection parameters, int (*callback)(NameValueCollection));
