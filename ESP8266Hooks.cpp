@@ -65,11 +65,11 @@ void ESP8266Hooks::init(const char *deviceName, int port)
 	_server->on("/hooks", HTTP_POST, [&]() {
 		DEBUG_PRINT("Agregando suscripción ");
 
-		String event = _server->arg("event");
+		const char *eventName = _server->arg("event").c_str();
 		String target = _server->arg("target");
 		String format = _server->arg("template");
 
-		DEBUG_PRINT(event);
+		DEBUG_PRINT(eventName);
 		DEBUG_PRINT(" => ");
 		DEBUG_PRINT(target);
 		DEBUG_PRINT(" [");
@@ -80,7 +80,7 @@ void ESP8266Hooks::init(const char *deviceName, int port)
 		subscription->target = target;
 		subscription->format = format;
 
-		hooks->subscribeEvent(event, subscription);
+		hooks->subscribeEvent(eventName, subscription);
 
 		_server->send(204);
 	});
@@ -88,14 +88,14 @@ void ESP8266Hooks::init(const char *deviceName, int port)
 	_server->on("/hooks", HTTP_DELETE, [&]() {
 		DEBUG_PRINT("Eliminando suscripción ");
 
-		String event = _server->arg("event");
+		const char *eventName = _server->arg("event").c_str();
 		String target = _server->arg("target");
 
-		DEBUG_PRINT(event);
+		DEBUG_PRINT(eventName);
 		DEBUG_PRINT(" => ");
 		DEBUG_PRINTLN(target);
 
-		hooks->unsubscribeEvent(event, target);
+		hooks->unsubscribeEvent(eventName, target);
 
 		_server->send(204);
 	});
@@ -139,7 +139,7 @@ void ESP8266Hooks::init(const char *deviceName, int port)
 	_server->begin();
 }
 
-void ESP8266Hooks::registerEvent(String eventName, String format)
+void ESP8266Hooks::registerEvent(const char *eventName, String format)
 {
 	Event *event = new Event();
 	event->name = eventName;
@@ -148,7 +148,7 @@ void ESP8266Hooks::registerEvent(String eventName, String format)
 	hooks->registerEvent(event);
 }
 
-void ESP8266Hooks::triggerEvent(String eventName, NameValueCollection values)
+void ESP8266Hooks::triggerEvent(const char *eventName, NameValueCollection values)
 {
 	hooks->triggerEvent(eventName, values);
 }

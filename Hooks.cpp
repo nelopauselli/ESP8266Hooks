@@ -26,7 +26,7 @@ struct Subscription
 
 struct Event
 {
-	String name;
+	const char* name;
 	Subscription *subscriptions;
 	String format;
 	Event *next;
@@ -77,7 +77,7 @@ class Hooks
 		{
 			if (event != _events)
 				body += ",";
-			body += "{\"name\": \"" + event->name + "\", ";
+			body += "{\"name\": \"" + String(event->name) + "\", ";
 			body += "\"template\": \"" + event->format + "\", ";
 			body += "\"subscriptions\": [";
 
@@ -126,12 +126,12 @@ class Hooks
 		_events = event;
 	}
 
-	void subscribeEvent(String eventName, Subscription *subscription)
+	void subscribeEvent(const char *eventName, Subscription *subscription)
 	{
 		Event *event = _events;
 		while (event != NULL)
 		{
-			if (event->name == eventName)
+			if (strcmp(event->name, eventName)==0)
 			{
 				subscription->next = event->subscriptions;
 				event->subscriptions = subscription;
@@ -142,12 +142,12 @@ class Hooks
 		}
 	}
 
-	void unsubscribeEvent(String eventName, String target)
+	void unsubscribeEvent(const char *eventName, String target)
 	{
 		Event *event = _events;
 		while (event != NULL)
 		{
-			if (event->name == eventName)
+			if (strcmp(event->name, eventName)==0)
 			{
 				Subscription *subscription = event->subscriptions;
 				while (subscription != NULL)
@@ -165,7 +165,7 @@ class Hooks
 		}
 	}
 
-	void triggerEvent(String eventName, NameValueCollection values)
+	void triggerEvent(const char *eventName, NameValueCollection values)
 	{
 		DEBUG_PRINT("desencadenado '");DEBUG_PRINT(eventName);DEBUG_PRINTLN("'");
 
@@ -173,7 +173,7 @@ class Hooks
 
 		while (event != NULL)
 		{
-			if (event->name == eventName)
+			if (strcmp(event->name, eventName)==0)
 			{
 				Subscription *subscription = event->subscriptions;
 
@@ -187,7 +187,7 @@ class Hooks
 					String body = "";
 					body = String(format);
 					body.replace("{mac}", _mac);
-					body.replace("{event}", event->name);
+					body.replace("{event}", String(event->name));
 					for (int i = 0; i < values.length(); i++)
 					{
 						const char* key = values.getKey(i);
