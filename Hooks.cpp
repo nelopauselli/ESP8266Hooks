@@ -48,7 +48,7 @@ class Hooks
   public:
 	Hooks(String mac, const char *deviceName)
 	{
-		Serial.println(mac);
+		DEBUG_PRINTLN(mac);
 		_mac = mac;
 		_deviceName = deviceName;
 	}
