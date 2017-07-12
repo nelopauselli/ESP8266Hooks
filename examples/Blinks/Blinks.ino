@@ -1,10 +1,13 @@
 #include "ESP8266Hooks.h"
-#define LED D1
+#define LED LED_BUILTIN
 
 ESP8266Hooks hooks;
 
+bool blinking = true;
+
 void setup() {
 	Serial.begin(115200);
+	Serial.println("");
 
 	pinMode(LED_BUILTIN, OUTPUT);
 	digitalWrite(LED_BUILTIN, HIGH);
@@ -29,14 +32,17 @@ void setup() {
 		Serial.print(".");
 	}
 
-	hooks.init("IoT Blink " + String(ip[3]));
+	Serial.print("Init IoT Blink with LED in pin ");
+	Serial.println(LED_BUILTIN);
 
-	hooks.registerEvent("blink_on", "");
-	hooks.registerEvent("blink_off", "");
+	hooks.init("IoT Blink");
+
+	hooks.registerEvent("led_on", "");
+	hooks.registerEvent("led_off", "");
 
 	ValueCollection parametersLedOn(0);
-	hooks.registerAction("led_on", parametersLedOn, listenerLedOn);
-	hooks.registerAction("led_off", parametersLedOn, listenerLedOff);
+	hooks.registerAction("blink_on", parametersLedOn, listenerBlinkOn);
+	hooks.registerAction("blink_off", parametersLedOn, listenerBlinkOff);
 
 	Serial.println("Ready");
 	digitalWrite(LED_BUILTIN, LOW);
@@ -47,26 +53,39 @@ bool state;
 void loop() {
 	hooks.handleClient();
 
+	if(!blinking) return;
+
 	int seconds = millis() / 1000;
 	if(seconds % 2==0 && !state){
-		hooks.triggerEvent("blink_on", NULL);
-		state = true;
-		Serial.println("on");
-	} else if (seconds % 2==1 && state){
-		hooks.triggerEvent("blink_off", NULL);
-		state = false;
-		Serial.println("off");
+		ledOn();
+	} else if (seconds % 2==1 && state) {
+		ledOff();
 	}
 
 	delay(50);
 }
 
-int listenerLedOn(NameValueCollection parameters){
-	digitalWrite(LED, LOW);
+int listenerBlinkOn(NameValueCollection parameters){
+	blinking = true;
 	return 204;
 }
 
-int listenerLedOff(NameValueCollection parameters){
-	digitalWrite(LED, HIGH);
+int listenerBlinkOff(NameValueCollection parameters){
+	blinking = false;
+	ledOff();
 	return 204;
+}
+
+void ledOn() {
+	hooks.triggerEvent("led_on", NULL);
+	state = true;
+	digitalWrite(LED, LOW);
+	Serial.println("on");
+}
+
+void ledOff() {
+	hooks.triggerEvent("led_off", NULL);
+	state = false;
+	digitalWrite(LED, HIGH);
+	Serial.println("off");
 }
