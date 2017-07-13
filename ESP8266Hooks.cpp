@@ -5,7 +5,7 @@
 #include "ESP8266Hooks.h"
 #include <ESP8266HTTPClient.h>
 
-//#define DEBUG_HOOKS
+#define DEBUG_HOOKS
 #ifdef DEBUG_HOOKS
 #define DEBUG_PRINT(...) Serial.print(__VA_ARGS__)
 #define DEBUG_PRINTLN(...) Serial.println(__VA_ARGS__)
@@ -66,22 +66,18 @@ void ESP8266Hooks::init(const char *deviceName, int port)
 	_server->on("/hooks", HTTP_POST, [&]() {
 		DEBUG_PRINT("Agregando suscripción ");
 
-		const char *eventName = _server->arg("event").c_str();
-		const char *target = _server->arg("target").c_str();
-		const char *format = _server->arg("template").c_str();
+		String eventName = _server->arg("event");
+		String target = _server->arg("target");
+		String format = _server->arg("template");
 
 		DEBUG_PRINT(eventName);
 		DEBUG_PRINT(" => ");
 		DEBUG_PRINT(target);
 		DEBUG_PRINT(" [");
 		DEBUG_PRINT(format);
-		DEBUG_PRINT("] ");
+		DEBUG_PRINTLN("] ");
 
-		Subscription *subscription = new Subscription();
-		subscription->target = target;
-		subscription->format = format;
-
-		hooks->subscribeEvent(eventName, subscription);
+		hooks->subscribeEvent(eventName.c_str(), target.c_str(), format.c_str());
 
 		_server->send(204);
 	});
@@ -142,11 +138,7 @@ void ESP8266Hooks::init(const char *deviceName, int port)
 
 void ESP8266Hooks::registerEvent(const char *eventName, const char *format)
 {
-	Event *event = new Event();
-	event->name = eventName;
-	event->format = format;
-
-	hooks->registerEvent(event);
+	hooks->registerEvent(eventName, format);
 }
 
 void ESP8266Hooks::triggerEvent(const char *eventName, NameValueCollection values)
@@ -162,16 +154,21 @@ void ESP8266Hooks::registerAction(char *actionName, ValueCollection parameters, 
 
 void ESP8266Hooks::handleClient()
 {
+	DEBUG_PRINTLN("Atendiendo http");
 	_server->handleClient();
 
-	DEBUG_PRINTLN("Iniciando envío de mensajes");
+	DEBUG_PRINTLN("Buscando mensajes");
 	Message *message = hooks->get_messages();
 	while (message != NULL)
 	{
+		DEBUG_PRINTLN("Analizando mensaje");
 		long now = millis(); //TODO: ver que hacemos cuando se reinicia millis()
 		if (!message->success && message->attempts < 5 && message->at < now - 5000)
 		{
-			DEBUG_PRINTLN("Enviando '" + message->body + "' hook a " + message->target);
+			DEBUG_PRINT("Enviando '");
+			DEBUG_PRINT(message->body);
+			DEBUG_PRINT("' hook a ");
+			DEBUG_PRINTLN(message->target);
 
 			HTTPClient http;
 			http.setTimeout(500);
@@ -184,7 +181,12 @@ void ESP8266Hooks::handleClient()
 				http.addHeader("Content-Type", "application/x-www-form-urlencoded");
 
 				int requestStart = millis();
-				int httpCode = http.POST(message->body);
+				String body2 = String(message->body);
+				DEBUG_PRINT("Enviando '");
+				DEBUG_PRINT(body2);
+				DEBUG_PRINTLN("'");
+
+				int httpCode = http.POST(body2);
 				int requestEnd = millis();
 
 				message->duration = requestEnd - requestStart;
@@ -199,7 +201,7 @@ void ESP8266Hooks::handleClient()
 					}
 					else
 					{
-						DEBUG_PRINTF("[HTTP] POST failed in %dms, error: %s\n", message->duration, http.errorToString(httpCode).c_str());
+						DEBUG_PRINTF("[HTTP] POST failed in %dms, error: %d - %s\n", message->duration, httpCode, http.errorToString(httpCode).c_str());
 						message->success = false;
 					}
 				}
@@ -219,12 +221,13 @@ void ESP8266Hooks::handleClient()
 
 		message = message->next;
 	}
+	DEBUG_PRINTLN("Terminando busqueda de mensajes");
 
 #ifdef DEBUG_HOOKS
 	message = hooks->get_messages();
 	while (message != NULL)
 	{
-		DEBUG_PRINT("Message to " + message->target + " ");
+		DEBUG_PRINT("Message to " + String(message->target) + " ");
 		if (message->success)
 			DEBUG_PRINT(" was success ");
 		else

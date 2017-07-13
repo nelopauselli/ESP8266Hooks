@@ -19,14 +19,14 @@ class HookAction
 	{
 	}
 	
-	HookAction(char *actionName, ValueCollection parameters, int (*callback)(NameValueCollection))
+	HookAction(const char *actionName, ValueCollection parameters, int (*callback)(NameValueCollection))
 	{
 		_actionName = actionName;
 		_parameters = parameters;
 		_callback = callback;
 	}
 
-	String getActionName()
+	const char *getActionName()
 	{
 		return _actionName;
 	}
@@ -42,7 +42,7 @@ class HookAction
 	}
 
   private:
-	String _actionName;
+	const char *_actionName;
 	ValueCollection _parameters;
 	int (*_callback)(NameValueCollection);
 };
