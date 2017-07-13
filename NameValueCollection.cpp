@@ -9,6 +9,10 @@
 #include "Arduino.h"
 #endif
 
+#ifdef __cplusplus
+#include <iostream>
+#endif // __cplusplus
+
 struct KeyValue {
     const char* key;
     const char* value;
@@ -28,7 +32,7 @@ class NameValueCollection
 	{
 		if (_current >= _capacity)
 			return false;
-		
+
 		KeyValue item;
 		item.key = key;
 		item.value = value;
