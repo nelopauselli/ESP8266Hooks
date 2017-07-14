@@ -21,7 +21,7 @@ void setup()
 	Serial.begin(115200);
 
 	// Simple WiFi connection
-	const char *ssid = "<WIFI SSID>"; //your wifi SSID
+	const char *ssid = "<WIFI SSID>";		  //your wifi SSID
 	const char *password = "<WIFI PASSOWRD>"; //your wifi password
 
 	WiFi.mode(WIFI_STA);
@@ -30,7 +30,7 @@ void setup()
 	IPAddress subnet(255, 255, 255, 0); // set subnet mask to match your
 	WiFi.config(ip, gateway, subnet);
 	WiFi.begin(ssid, password);
-	
+
 	Serial.println("");
 	while (WiFi.status() != WL_CONNECTED)
 	{
@@ -53,11 +53,8 @@ void setup()
 
 	hooks.registerEvent("text_change", "mac={mac}&line1={line1}&line2={line2}");
 
-	ValueCollection actionParameters(2);
-	actionParameters.push("line1");
-	actionParameters.push("line2");
-	hooks.registerAction("show_text", actionParameters, showText);
-
+	string p[] = {"line1", "line2"};
+	hooks.registerAction("show_text", p, showText);
 
 	NameValueCollection parameters(1);
 	parameters.push("start", "1");
@@ -72,7 +69,6 @@ void loop()
 	delay(10);
 }
 
-
 void initLCD()
 {
 	lcd.begin(D2, D1);
@@ -85,7 +81,7 @@ int showText(NameValueCollection parameters)
 	String line2 = parameters["line2"];
 
 	lcd.clear();
-	
+
 	lcd.setCursor(0, 0);
 	lcd.print(line1);
 

@@ -21,7 +21,7 @@ public:
 	void registerEvent(const char *eventName, const char * format);
 	void triggerEvent(const char *eventName, NameValueCollection values);
 
-	void registerAction(char *actionName, ValueCollection parameters, int (*callback)(NameValueCollection));
+	void registerAction(char *actionName, string *parameters, int (*callback)(NameValueCollection));
 
 	void handleClient();
 

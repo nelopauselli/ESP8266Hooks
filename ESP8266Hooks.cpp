@@ -146,10 +146,9 @@ void ESP8266Hooks::triggerEvent(const char *eventName, NameValueCollection value
 	hooks->triggerEvent(eventName, values);
 }
 
-void ESP8266Hooks::registerAction(char *actionName, ValueCollection parameters, int (*callback)(NameValueCollection))
+void ESP8266Hooks::registerAction(char *actionName, string *parameters, int (*callback)(NameValueCollection))
 {
-	HookAction action(actionName, parameters, callback);
-	hooks->registerAction(action);
+	hooks->registerAction(actionName, parameters, callback);
 }
 
 void ESP8266Hooks::handleClient()

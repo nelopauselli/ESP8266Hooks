@@ -8,6 +8,7 @@
 
 #define DEBUG_HOOKS
 #ifdef DEBUG_HOOKS
+#ifdef ARDUINO
 #define DEBUG_PRINT(...) Serial.print(__VA_ARGS__)
 #define DEBUG_PRINTLN(...) Serial.println(__VA_ARGS__)
 #define DEBUG_PRINTF(...) Serial.printf(__VA_ARGS__)
@@ -15,6 +16,17 @@
 #define DEBUG_PRINT(...)
 #define DEBUG_PRINTLN(...)
 #define DEBUG_PRINTF(...)
+#endif
+#else
+#define DEBUG_PRINT(...)
+#define DEBUG_PRINTLN(...)
+#define DEBUG_PRINTF(...)
+#endif
+
+#ifdef __cplusplus
+#endif // __cplusplus
+#ifdef ARDUINO
+typedef char *string;
 #endif
 
 struct Subscription
@@ -41,6 +53,14 @@ struct Message
 	int attempts = 0;
 	long at = 0;
 	Message *next;
+};
+
+struct Action
+{
+	const char *name = NULL;
+	const string *parameters = NULL;
+	int (*callback)(NameValueCollection) = NULL;
+	Action *next = NULL;
 };
 
 class Hooks
@@ -296,7 +316,7 @@ class Hooks
 
 					Message *message = new Message();
 					message->target = subscription->target;
-					message->body = new char[body.length()+1];
+					message->body = new char[body.length() + 1];
 					strcpy(message->body, body.c_str());
 					message->next = _messages;
 					_messages = message;
@@ -334,9 +354,14 @@ class Hooks
 		return body;
 	}
 
-	void registerAction(HookAction action)
+	void registerAction(char *actionName, string *parameters, int (*callback)(NameValueCollection))
 	{
-		_actions[_indexAction++] = action;
+		Action *action = new Action();
+		action->name = actionName;
+		action->parameters = parameters;
+		action->callback = callback;
+		action->next = _actions2;
+		_actions2 = action;
 	}
 
 	int triggerAction(String actionName, NameValueCollection parameters)
@@ -398,6 +423,7 @@ class Hooks
 	String _mac;
 	const char *_deviceName;
 	Event *_events = NULL;
+	Action *_actions2 = NULL;
 	Message *_messages = NULL;
 	HookAction _actions[10];
 	int _indexAction;

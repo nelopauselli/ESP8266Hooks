@@ -7,6 +7,8 @@
 
 #ifdef ARDUINO
 #include "Arduino.h"
+#else
+#include <iostream>
 #endif
 
 struct KeyValue {
@@ -28,7 +30,7 @@ class NameValueCollection
 	{
 		if (_current >= _capacity)
 			return false;
-		
+
 		KeyValue item;
 		item.key = key;
 		item.value = value;

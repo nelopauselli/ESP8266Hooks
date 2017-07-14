@@ -40,18 +40,17 @@ void setup()
 	hooks.registerEvent("button_change", "state={state}");
 
 	hooks.registerEvent("light_each_30_seconds", "light={light}");
-	ValueCollection lightConfigureParameters(1);
-	lightConfigureParameters.push("limit");
-	hooks.registerAction("light_configure", lightConfigureParameters, configureLight);
+
+	string p[] = {"limit"};
+	hooks.registerAction("light_configure", p, configureLight);
 
 	hooks.registerEvent("led_change", "state={state}");
 	hooks.registerEvent("led_on", "state={state}");
 	hooks.registerEvent("led_off", "state={state}");
 	
-	ValueCollection listenerLedOnParameters(0);
-	hooks.registerAction("led_on", listenerLedOnParameters, listenerLedOn);
+	hooks.registerAction("led_on", NULL, listenerLedOn);
 	ValueCollection listenerLedOffParameters(0);
-	hooks.registerAction("led_off", listenerLedOffParameters, listenerLedOff);
+	hooks.registerAction("led_off", NULL, listenerLedOff);
 
 	digitalWrite(LED_BUILTIN, LOW);
 }

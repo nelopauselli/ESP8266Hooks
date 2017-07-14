@@ -40,9 +40,13 @@ void setup() {
 	hooks.registerEvent("led_on", "");
 	hooks.registerEvent("led_off", "");
 
-	ValueCollection parametersLedOn(0);
-	hooks.registerAction("blink_on", parametersLedOn, listenerBlinkOn);
-	hooks.registerAction("blink_off", parametersLedOn, listenerBlinkOff);
+	string *p1 = new string[2];
+	p1[0] = "state";
+	p1[1] = "duration";
+	hooks.registerAction("blink_on", p1, listenerBlinkOn);
+
+	string p2[] = {"state", "duration"};
+	hooks.registerAction("blink_off", p2, listenerBlinkOff);
 
 	Serial.println("Ready");
 	digitalWrite(LED_BUILTIN, LOW);
@@ -62,7 +66,7 @@ void loop() {
 		ledOff();
 	}
 
-	delay(50);
+	delay(1000);
 }
 
 int listenerBlinkOn(NameValueCollection parameters){
