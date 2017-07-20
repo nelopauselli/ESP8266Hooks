@@ -53,8 +53,7 @@ void setup()
 
 	hooks.registerEvent("text_change", "mac={mac}&line1={line1}&line2={line2}");
 
-	string p[] = {"line1", "line2"};
-	hooks.registerAction("show_text", p, showText);
+	hooks.registerAction("show_text", "\"line1\", \"line2\"", showText);
 
 	NameValueCollection parameters(1);
 	parameters.push("start", "1");

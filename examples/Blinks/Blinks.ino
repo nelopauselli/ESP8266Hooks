@@ -40,13 +40,9 @@ void setup() {
 	hooks.registerEvent("led_on", "");
 	hooks.registerEvent("led_off", "");
 
-	string *p1 = new string[2];
-	p1[0] = "state";
-	p1[1] = "duration";
-	hooks.registerAction("blink_on", p1, listenerBlinkOn);
-
-	string p2[] = {"state", "duration"};
-	hooks.registerAction("blink_off", p2, listenerBlinkOff);
+	;
+	hooks.registerAction("blink_on", "\"state\", \"duration\"", listenerBlinkOn);
+	hooks.registerAction("blink_off", "\"state\", \"duration\"", listenerBlinkOff);
 
 	Serial.println("Ready");
 	digitalWrite(LED_BUILTIN, LOW);

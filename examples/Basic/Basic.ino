@@ -41,8 +41,7 @@ void setup()
 
 	hooks.registerEvent("light_each_30_seconds", "light={light}");
 
-	string p[] = {"limit"};
-	hooks.registerAction("light_configure", p, configureLight);
+	hooks.registerAction("light_configure", "\"limit\"", configureLight);
 
 	hooks.registerEvent("led_change", "state={state}");
 	hooks.registerEvent("led_on", "state={state}");

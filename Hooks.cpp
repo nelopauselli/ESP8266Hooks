@@ -26,7 +26,7 @@
 #ifdef __cplusplus
 #endif // __cplusplus
 #ifdef ARDUINO
-typedef char *string;
+//typedef char *string;
 #endif
 
 struct Subscription
@@ -58,7 +58,7 @@ struct Message
 struct Action
 {
 	const char *name = NULL;
-	const string *parameters = NULL;
+	const char *parameters = NULL;
 	int (*callback)(NameValueCollection) = NULL;
 	Action *next = NULL;
 };
@@ -138,8 +138,9 @@ class Hooks
 			
 			if (action->parameters != NULL)
 			{
-				body += ", \"parameters\": ";
-				body += String(sizeof(action->parameters));
+				body += ", \"parameters\": [";
+				body += String(action->parameters);
+				body += "]";
 			}
 
 			body += "}";
@@ -367,7 +368,7 @@ class Hooks
 		return body;
 	}
 
-	void registerAction(const char *actionName, string *parameters, int (*callback)(NameValueCollection))
+	void registerAction(const char *actionName, const char *parameters, int (*callback)(NameValueCollection))
 	{
 		DEBUG_PRINT("Registrando acción: ");
 		DEBUG_PRINTLN(actionName);
@@ -405,6 +406,8 @@ class Hooks
 				}
 				return action->callback(parameters);
 			}
+
+			action = action->next;
 		}
 		return 404;
 	}
