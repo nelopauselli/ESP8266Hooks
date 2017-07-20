@@ -124,14 +124,27 @@ class Hooks
 		body += "], ";
 
 		body += "\"actions\": [";
-		for (int i = 0; i < _indexAction; i++)
+		Action *action = _actions;
+		while (action != NULL)
 		{
-			String action = _actions[i].getActionName();
-			ValueCollection parameters = this->_actions[i].getParameters();
+			DEBUG_PRINTLN(action->name);
 
-			if (i > 0)
+			if (action != _actions)
 				body += ",";
-			body += "{\"name\": \"" + action + "\", \"parameters\": " + parameters.toJSON() + "}";
+
+			body += "{\"name\": \"";
+			body += String(action->name);
+			body +="\"";
+			
+			if (action->parameters != NULL)
+			{
+				body += ", \"parameters\": ";
+				body += String(sizeof(action->parameters));
+			}
+
+			body += "}";
+
+			action = action->next;
 		}
 		body += "]";
 
@@ -354,22 +367,29 @@ class Hooks
 		return body;
 	}
 
-	void registerAction(char *actionName, string *parameters, int (*callback)(NameValueCollection))
+	void registerAction(const char *actionName, string *parameters, int (*callback)(NameValueCollection))
 	{
+		DEBUG_PRINT("Registrando acción: ");
+		DEBUG_PRINTLN(actionName);
 		Action *action = new Action();
 		action->name = actionName;
+
 		action->parameters = parameters;
 		action->callback = callback;
-		action->next = _actions2;
-		_actions2 = action;
+		action->next = _actions;
+		_actions = action;
+
+		DEBUG_PRINT("Acción ");
+		DEBUG_PRINT(action->name);
+		DEBUG_PRINTLN(" registrada");
 	}
 
-	int triggerAction(String actionName, NameValueCollection parameters)
+	int triggerAction(const char *actionName, NameValueCollection parameters)
 	{
-		for (int i = 0; i < _indexAction; i++)
+		Action *action = _actions;
+		while (action != NULL)
 		{
-			HookAction hookAction = _actions[i];
-			if (actionName == hookAction.getActionName())
+			if (strcmp(action->name, actionName) == 0)
 			{
 				DEBUG_PRINTLN("Desencadenando accion con los parametros: ");
 				for (int i = 0; i < parameters.length(); i++)
@@ -383,7 +403,7 @@ class Hooks
 					const char *value = parameters[key];
 					DEBUG_PRINTLN(value);
 				}
-				return hookAction.invoke(parameters);
+				return action->callback(parameters);
 			}
 		}
 		return 404;
@@ -423,10 +443,8 @@ class Hooks
 	String _mac;
 	const char *_deviceName;
 	Event *_events = NULL;
-	Action *_actions2 = NULL;
+	Action *_actions = NULL;
 	Message *_messages = NULL;
-	HookAction _actions[10];
-	int _indexAction;
 };
 
 #endif

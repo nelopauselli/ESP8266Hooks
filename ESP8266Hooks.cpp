@@ -107,7 +107,7 @@ void ESP8266Hooks::init(const char *deviceName, int port)
 
 	_server->on("/actions", HTTP_POST, [&]() {
 		DEBUG_PRINT("Recibiendo accion: ");
-		String actionName = _server->arg("action");
+		const char * actionName = _server->arg("action").c_str();
 		DEBUG_PRINTLN(actionName);
 
 		DEBUG_PRINTLN("Creando parametros");
@@ -121,7 +121,6 @@ void ESP8266Hooks::init(const char *deviceName, int port)
 		}
 
 		DEBUG_PRINTLN("Buscando y lanzando accion");
-
 		int statusCode = hooks->triggerAction(actionName, parameters);
 
 		_server->send(statusCode);
@@ -146,7 +145,7 @@ void ESP8266Hooks::triggerEvent(const char *eventName, NameValueCollection value
 	hooks->triggerEvent(eventName, values);
 }
 
-void ESP8266Hooks::registerAction(char *actionName, string *parameters, int (*callback)(NameValueCollection))
+void ESP8266Hooks::registerAction(const char *actionName, string *parameters, int (*callback)(NameValueCollection))
 {
 	hooks->registerAction(actionName, parameters, callback);
 }
