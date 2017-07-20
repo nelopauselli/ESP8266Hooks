@@ -65,11 +65,12 @@ struct Action
 class Hooks
 {
   public:
-	Hooks(String mac, const char *deviceName)
+	Hooks(const char *mac, const char *deviceName)
 	{
 		DEBUG_PRINT("Creando instancia de Hooks. MAC:");
 		DEBUG_PRINTLN(mac);
-		_mac = mac;
+		_mac = new char[strlen(mac)];
+		strcpy(_mac, mac);
 		_deviceName = deviceName;
 	}
 
@@ -78,77 +79,79 @@ class Hooks
 		return _messages;
 	}
 
-	String get_definition()
+	char* get_definition()
 	{
-		String body = "{";
+		char body[1024]; //TODO: ir calculando el size a medida que se registran eventos y acciones
 
-		body += "\"name\": \"";
-		body += _deviceName;
-		body += "\", ";
+		strcpy(body, "{");
 
-		body += "\"mac\": \"";
-		body += _mac;
-		body += "\", ";
+		strcat(body, "\"name\": \"");
+		strcat(body, _deviceName);
+		strcat(body, "\", ");
 
-		body += "\"events\": [";
+		strcat(body, "\"mac\": \"");
+		strcat(body, _mac);
+		strcat(body, "\", ");
+
+		strcat(body, "\"events\": [");
 		Event *event = _events;
 		while (event != NULL)
 		{
 			if (event != _events)
-				body += ",";
-			body += "{\"name\": \"" + String(event->name) + "\", ";
-			body += "\"template\": \"" + String(event->format) + "\", ";
-			body += "\"subscriptions\": [";
+				strcat(body, ",");
+			strcat(body, "{\"name\": \"");
+			strcat(body, event->name);
+			strcat(body, "\", \"template\": \"");
+			strcat(body, event->format);
+			strcat(body, "\", \"subscriptions\": [");
 
 			Subscription *subscription = event->subscriptions;
 			while (subscription != NULL)
 			{
 				if (subscription != event->subscriptions)
-					body += ",";
-				body += "{";
-				body += "\"target\": \"";
-				body += String(subscription->target);
-				body += "\"";
-				body += ",\"template\": \"";
-				body += String(subscription->format);
-				body += "\"";
-				body += "}";
+					strcat(body, ",");
+				strcat(body, "{");
+				strcat(body, "\"target\": \"");
+				strcat(body, subscription->target);
+				strcat(body, "\"");
+				strcat(body, ",\"template\": \"");
+				strcat(body, subscription->format);
+				strcat(body, "\"");
+				strcat(body, "}");
 
 				subscription = subscription->next;
 			}
-			body += "]}";
+			strcat(body, "]}");
 
 			event = event->next;
 		}
-		body += "], ";
+		strcat(body, "], ");
 
-		body += "\"actions\": [";
+		strcat(body, "\"actions\": [");
 		Action *action = _actions;
 		while (action != NULL)
 		{
 			DEBUG_PRINTLN(action->name);
 
 			if (action != _actions)
-				body += ",";
+				strcat(body, ",");
 
-			body += "{\"name\": \"";
-			body += String(action->name);
-			body +="\"";
+			strcat(body, "{\"name\": \"");
+			strcat(body, action->name);
+			strcat(body, "\"");
 			
 			if (action->parameters != NULL)
 			{
-				body += ", \"parameters\": [";
-				body += String(action->parameters);
-				body += "]";
+				strcat(body, ", \"parameters\": [");
+				strcat(body, action->parameters);
+				strcat(body, "]");
 			}
 
-			body += "}";
+			strcat(body, "}");
 
 			action = action->next;
 		}
-		body += "]";
-
-		body += "}";
+		strcat(body, "]}");
 
 		return body;
 	}
@@ -303,7 +306,7 @@ class Hooks
 					DEBUG_PRINT("1. ");
 					DEBUG_PRINTLN(body);
 
-					body.replace("{mac}", _mac);
+					body.replace("{mac}", String(_mac));
 					DEBUG_PRINT("2. ");
 					DEBUG_PRINTLN(body);
 					body.replace("{event}", String(event->name));
@@ -442,7 +445,7 @@ class Hooks
 	}
 
   private:
-	String _mac;
+	char *_mac;
 	const char *_deviceName;
 	Event *_events = NULL;
 	Action *_actions = NULL;
