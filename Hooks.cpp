@@ -4,7 +4,6 @@
 #define HISTORY_MAX 20
 
 #include "NameValueCollection.cpp"
-#include "HookAction.cpp"
 
 #define DEBUG_HOOKS
 #ifdef DEBUG_HOOKS

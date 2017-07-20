@@ -10,7 +10,6 @@
 #endif
 
 #include "Hooks.cpp"
-#include "HookAction.cpp"
 #include <ESP8266WebServer.h>
 
 class ESP8266Hooks

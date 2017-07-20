@@ -48,7 +48,6 @@ void setup()
 	hooks.registerEvent("led_off", "state={state}");
 	
 	hooks.registerAction("led_on", NULL, listenerLedOn);
-	ValueCollection listenerLedOffParameters(0);
 	hooks.registerAction("led_off", NULL, listenerLedOff);
 
 	digitalWrite(LED_BUILTIN, LOW);
