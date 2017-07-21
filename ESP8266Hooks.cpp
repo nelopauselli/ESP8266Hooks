@@ -60,6 +60,8 @@ void ESP8266Hooks::init(const char *deviceName, int port)
 	_server->on("/history", HTTP_GET, [&]() {
 		DEBUG_PRINTLN("sending history");
 		String body = hooks->get_history();
+		DEBUG_PRINT("History: ");
+		DEBUG_PRINTLN(body);
 		_server->send(200, "application/json", body);
 	});
 

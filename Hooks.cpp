@@ -79,7 +79,7 @@ class Hooks
 		return _messages;
 	}
 
-	char* get_definition()
+	char *get_definition()
 	{
 		char body[1024]; //TODO: ir calculando el size a medida que se registran eventos y acciones
 
@@ -139,7 +139,7 @@ class Hooks
 			strcat(body, "{\"name\": \"");
 			strcat(body, action->name);
 			strcat(body, "\"");
-			
+
 			if (action->parameters != NULL)
 			{
 				strcat(body, ", \"parameters\": [");
@@ -344,29 +344,84 @@ class Hooks
 		}
 	}
 
-	String get_history()
+	char *get_history()
 	{
-		String body = "[";
+		char body[2048];
+
+		strcpy(body, "[");
 
 		Message *message = _messages;
 		while (message != NULL)
 		{
-			if (message != _messages)
-				body += ",";
+			DEBUG_PRINTLN("Procesando message");
+			DEBUG_PRINT("\tat: ");
+			DEBUG_PRINTLN(message->at);
+			DEBUG_PRINT("\ttarget: ");
+			DEBUG_PRINTLN(message->target);
+			DEBUG_PRINT("\tbody: ");
+			DEBUG_PRINTLN(message->body);
+			DEBUG_PRINT("\tsuccess: ");
+			DEBUG_PRINTLN(message->success);
+			DEBUG_PRINT("\tduration: ");
+			DEBUG_PRINTLN(message->duration);
 
-			body += "{";
-			body += "\"target\":\"" + String(message->target) + "\", ";
-			body += "\"body\":\"" + String(message->body) + "\", ";
-			body += "\"success\":\"" + String(message->success ? "yes" : "no") + "\", ";
-			body += "\"duration\":" + String(message->duration, DEC) + ", ";
-			body += "\"attempts\":" + String(message->attempts, DEC) + ", ";
-			body += "\"at\":" + String(message->at, DEC) + "";
-			body += "}";
+			char buffer[256];
+			strcpy(buffer, "{");
+			strcat(buffer, "\"target\":\"");
+			strcat(buffer, message->target);
+			strcat(buffer, "\", ");
+			strcat(buffer, "\"body\":\"");
+			strcat(buffer, message->body);
+			strcat(buffer, "\", ");
+			strcat(buffer, "\"success\":\"");
+			strcat(buffer, message->success ? "yes" : "no");
+			strcat(buffer, "\", ");
+			strcat(buffer, "\"duration\":");
+
+			char tmp[33];
+			itoa(message->duration, tmp, 10);
+			strcat(buffer, tmp);
+			strcat(buffer, ", ");
+			strcat(buffer, "\"attempts\":");
+			itoa(message->attempts, tmp, 10);
+			strcat(buffer, tmp);
+			strcat(buffer, ", ");
+			strcat(buffer, "\"at\":");
+			itoa(message->at, tmp, 10);
+			strcat(buffer, tmp);
+			strcat(buffer, "}");
+
+			DEBUG_PRINT("strlen(body): ");
+			DEBUG_PRINTLN(strlen(body));
+			DEBUG_PRINT("strlen(buffer): ");
+			DEBUG_PRINTLN(strlen(buffer));
+			DEBUG_PRINT("sizeof(body): ");
+			DEBUG_PRINTLN(sizeof(body));
+			DEBUG_PRINT("sizeof(body[0]): ");
+			DEBUG_PRINTLN(sizeof(body[0]));
+
+			if (strlen(body) + strlen(buffer) < sizeof(body) / sizeof(body[0]))
+			{
+				if (message != _messages)
+					strcat(body, ",");
+				strcat(body, buffer);
+			}
+
+			else
+			{
+				DEBUG_PRINTLN("break");
+
+				break;
+			}
 
 			message = message->next;
 		}
-		body += "]";
+		strcat(body, "]");
 
+		DEBUG_PRINT("History [");
+		DEBUG_PRINT(strlen(body));
+		DEBUG_PRINT("]: ");
+		DEBUG_PRINTLN(body);
 		return body;
 	}
 
