@@ -4,6 +4,7 @@
 #define HISTORY_MAX 20
 
 #include "NameValueCollection.cpp"
+#include "CharTools.h"
 
 #define DEBUG_HOOKS
 #ifdef DEBUG_HOOKS
@@ -268,7 +269,7 @@ class Hooks
 		}
 	}
 
-	void triggerEvent(const char *eventName, NameValueCollection values)
+	void triggerEvent(const char *eventName, NameValueCollection parameters)
 	{
 		DEBUG_PRINT("desencadenado '");
 		DEBUG_PRINT(eventName);
@@ -284,46 +285,56 @@ class Hooks
 
 				while (subscription != NULL)
 				{
-					String body = "";
+					const char *format;
 					if (subscription->format != NULL)
 					{
 						DEBUG_PRINT("0. subscription.format: ");
 						DEBUG_PRINTLN(subscription->format);
-						body = String(subscription->format);
+						format = subscription->format;
 					}
 					else if (event->format != NULL && strlen(event->format) > 1)
 					{
 						DEBUG_PRINT("0. event.format: ");
 						DEBUG_PRINTLN(event->format);
-						body = String(event->format);
+						format = event->format;
 					}
 					else
 					{
-						body = "mac={mac}&event={event}";
+						format = "mac={mac}&event={event}";
 						DEBUG_PRINT("0. default body: ");
-						DEBUG_PRINTLN(body);
 					}
 					DEBUG_PRINT("1. ");
-					DEBUG_PRINTLN(body);
+					DEBUG_PRINTLN(format);
 
-					body.replace("{mac}", String(_mac));
-					DEBUG_PRINT("2. ");
-					DEBUG_PRINTLN(body);
-					body.replace("{event}", String(event->name));
-					DEBUG_PRINT("3. ");
-					DEBUG_PRINTLN(body);
-					for (int i = 0; i < values.length(); i++)
+					int length = parameters.length() + 2;
+					const char *keys[length];
+					const char *values[length];
+
+					keys[0] = "{mac}";
+					values[0] = _mac;
+					keys[1] = "{event}";
+					values[1] = event->name;
+
+					for (int i = 0; i < parameters.length(); i++)
 					{
-						const char *key = values.getKey(i);
-						const char *value = values[key];
-						body.replace("{" + String(key) + "}", String(value));
-						DEBUG_PRINT("4.");
-						DEBUG_PRINT(i);
-						DEBUG_PRINTLN(body);
+						const char *key = parameters.getKey(i);
+						const char *value = parameters[key];
+						keys[i+2] = key;
+						values[i+2] = value;
+
+						DEBUG_PRINT('\t');
+						DEBUG_PRINT(key);
+						DEBUG_PRINT(':');
+						DEBUG_PRINTLN(value);
 					}
 
+					char buffer[1024];
+					CharTools.replace(format, buffer, keys, values, length);
+					DEBUG_PRINT("3. ");
+					DEBUG_PRINTLN(buffer);
+
 					DEBUG_PRINT("Encolando mensaje '");
-					DEBUG_PRINT(body);
+					DEBUG_PRINT(buffer);
 					DEBUG_PRINT("' para ");
 					DEBUG_PRINT(strlen(subscription->target));
 					DEBUG_PRINT(" '");
@@ -332,8 +343,7 @@ class Hooks
 
 					Message *message = new Message();
 					message->target = subscription->target;
-					message->body = new char[body.length() + 1];
-					strcpy(message->body, body.c_str());
+					message->body = buffer;
 					message->next = _messages;
 					_messages = message;
 
@@ -493,7 +503,8 @@ class Hooks
 		if (message == NULL)
 			return;
 
-		DEBUG_PRINTLN("Quitando mensaje at: " + String(message->at));
+		DEBUG_PRINT("Quitando mensaje at: ");
+		DEBUG_PRINTLN(message->at);
 		this->cleanMessagesAfter(message->next);
 
 		message->next = NULL;
