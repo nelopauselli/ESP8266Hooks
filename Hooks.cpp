@@ -13,8 +13,8 @@
 #define DEBUG_PRINTLN(...) Serial.println(__VA_ARGS__)
 #define DEBUG_PRINTF(...) Serial.printf(__VA_ARGS__)
 #else
-#define DEBUG_PRINT(...)
-#define DEBUG_PRINTLN(...)
+#define DEBUG_PRINT(...) std::cout << __VA_ARGS__
+#define DEBUG_PRINTLN(...) std::cout << __VA_ARGS__ << std::endl
 #define DEBUG_PRINTF(...)
 #endif
 #else
@@ -23,11 +23,9 @@
 #define DEBUG_PRINTF(...)
 #endif
 
-#ifdef __cplusplus
-#endif // __cplusplus
-#ifdef ARDUINO
-//typedef char *string;
-#endif
+#ifdef WIN32
+#include <cstring>
+#endif //WIN32
 
 struct Subscription
 {
@@ -86,25 +84,25 @@ class Hooks
 
 		strcpy(body, "{");
 
-		strcat(body, "\"name\": \"");
+		strcat(body, "\"name\":\"");
 		strcat(body, _deviceName);
-		strcat(body, "\", ");
+		strcat(body, "\",");
 
-		strcat(body, "\"mac\": \"");
+		strcat(body, "\"mac\":\"");
 		strcat(body, _mac);
-		strcat(body, "\", ");
+		strcat(body, "\",");
 
-		strcat(body, "\"events\": [");
+		strcat(body, "\"events\":[");
 		Event *event = _events;
 		while (event != NULL)
 		{
 			if (event != _events)
 				strcat(body, ",");
-			strcat(body, "{\"name\": \"");
+			strcat(body, "{\"name\":\"");
 			strcat(body, event->name);
-			strcat(body, "\", \"template\": \"");
+			strcat(body, "\",\"template\":\"");
 			strcat(body, event->format);
-			strcat(body, "\", \"subscriptions\": [");
+			strcat(body, "\",\"subscriptions\":[");
 
 			Subscription *subscription = event->subscriptions;
 			while (subscription != NULL)
@@ -112,10 +110,10 @@ class Hooks
 				if (subscription != event->subscriptions)
 					strcat(body, ",");
 				strcat(body, "{");
-				strcat(body, "\"target\": \"");
+				strcat(body, "\"target\":\"");
 				strcat(body, subscription->target);
 				strcat(body, "\"");
-				strcat(body, ",\"template\": \"");
+				strcat(body, ",\"template\":\"");
 				strcat(body, subscription->format);
 				strcat(body, "\"");
 				strcat(body, "}");
@@ -126,9 +124,9 @@ class Hooks
 
 			event = event->next;
 		}
-		strcat(body, "], ");
+		strcat(body, "],");
 
-		strcat(body, "\"actions\": [");
+		strcat(body, "\"actions\":[");
 		Action *action = _actions;
 		while (action != NULL)
 		{
@@ -137,13 +135,13 @@ class Hooks
 			if (action != _actions)
 				strcat(body, ",");
 
-			strcat(body, "{\"name\": \"");
+			strcat(body, "{\"name\":\"");
 			strcat(body, action->name);
 			strcat(body, "\"");
 
 			if (action->parameters != NULL)
 			{
-				strcat(body, ", \"parameters\": [");
+				strcat(body, ", \"parameters\":[");
 				strcat(body, action->parameters);
 				strcat(body, "]");
 			}
@@ -307,25 +305,56 @@ class Hooks
 					DEBUG_PRINTLN(format);
 
 					int length = parameters.length() + 2;
+					DEBUG_PRINT("1.1. parameters length: ");
+					DEBUG_PRINTLN(length);
 					const char *keys[length];
 					const char *values[length];
+					DEBUG_PRINTLN("1.2. keys and values defined");
 
 					keys[0] = "{mac}";
 					values[0] = _mac;
 					keys[1] = "{event}";
 					values[1] = event->name;
 
+					DEBUG_PRINTLN("1.3. iterating parameters");
 					for (int i = 0; i < parameters.length(); i++)
 					{
+						DEBUG_PRINT("1.4.");
+						DEBUG_PRINT(i);
+						DEBUG_PRINT(" getting key...");
 						const char *key = parameters.getKey(i);
-						const char *value = parameters[key];
-						keys[i+2] = key;
-						values[i+2] = value;
+						if (key != NULL)
+						{
+							DEBUG_PRINTLN(" and value...");
+							const char *value = parameters[key];
+							if (value != NULL)
+							{
+								DEBUG_PRINT(key);
+								DEBUG_PRINT(": ");
+								DEBUG_PRINTLN(value);
 
-						DEBUG_PRINT('\t');
-						DEBUG_PRINT(key);
-						DEBUG_PRINT(':');
-						DEBUG_PRINTLN(value);
+								char *keytmp = new char[strlen(key)+2];
+								strcpy(keytmp, "{");
+								strcat(keytmp, key);
+								strcat(keytmp, "}");
+
+								keys[i + 2] = keytmp;
+								values[i + 2] = value;
+
+								DEBUG_PRINT('\t');
+								DEBUG_PRINT(key);
+								DEBUG_PRINT(':');
+								DEBUG_PRINTLN(value);
+							}
+							else
+							{
+								DEBUG_PRINTLN("value is null");
+							}
+						}
+						else
+						{
+							DEBUG_PRINTLN("key is null");
+						}
 					}
 
 					char buffer[1024];

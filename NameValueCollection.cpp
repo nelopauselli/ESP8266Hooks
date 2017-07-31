@@ -40,9 +40,6 @@ class NameValueCollection
 	}
 
 	const char* getKey(int index){
-		if (_current >= _capacity)
-			return NULL;
-
 		return _items[index].key;
 	}
 
@@ -50,7 +47,7 @@ class NameValueCollection
 	{
 		for (int i = 0; i < _current; i++)
 		{
-			if (_items[i].key == key)
+			if (strcmp(_items[i].key, key)==0)
 			{
 				return _items[i].value;
 			}
@@ -63,8 +60,8 @@ class NameValueCollection
 	}
   private:
   	KeyValue *_items = NULL;
-	int _capacity=0;
-	int _current=0;
+	int _capacity;
+	int _current;
 };
 
 #endif

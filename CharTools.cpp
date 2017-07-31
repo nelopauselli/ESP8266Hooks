@@ -1,5 +1,10 @@
 #include "CharTools.h"
+#ifdef ARDUINO
 #include "Arduino.h"
+#endif // ARDUINO
+#ifdef WIN32
+#include <cstring>
+#endif // WIN32
 
 CharToolsClass CharTools;
 
